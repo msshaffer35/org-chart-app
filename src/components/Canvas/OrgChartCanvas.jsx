@@ -29,8 +29,54 @@ const initialEdges = [
 
 const OrgChartCanvas = () => {
     const {
-        nodes, edges, onNodesChange, onEdgesChange, onConnect
+        nodes, edges, onNodesChange, onEdgesChange, onConnect, reparentNode, deleteNode
     } = useStore();
+
+    const onNodeDragStop = useCallback((event, node) => {
+        // Simple collision detection
+        // We check if the dragged node's center is inside another node's bounding box
+        const nodeCenter = {
+            x: node.position.x + 128, // half width (256/2)
+            y: node.position.y + 70,  // half height (140/2)
+        };
+
+        const targetNode = nodes.find(n => {
+            if (n.id === node.id) return false;
+
+            // Check collision with other nodes
+            // Assuming standard node size w-64 (256px) x approx 140px
+            return (
+                nodeCenter.x >= n.position.x &&
+                nodeCenter.x <= n.position.x + 256 &&
+                nodeCenter.y >= n.position.y &&
+                nodeCenter.y <= n.position.y + 140
+            );
+        });
+
+        if (targetNode) {
+            if (window.confirm(`Move "${node.data.label}" to report to "${targetNode.data.label}"?`)) {
+                reparentNode(node.id, targetNode.id);
+            }
+        }
+    }, [nodes, reparentNode]);
+
+    const onNodesDelete = useCallback((deletedNodes) => {
+        // React Flow handles the UI removal, but we want to ensure our store logic runs (cascading delete)
+        // However, onNodesChange already handles basic removal.
+        // If we want cascading delete on key press, we should intercept it or use onNodesDelete.
+        // Let's use onNodesDelete to trigger our custom delete logic for the first node found.
+        // Note: React Flow might have already removed them from its internal state, so we need to be careful.
+        // Actually, simpler: just let React Flow handle selection, and we provide a Delete button.
+        // OR, we override the default delete behavior.
+
+        // For now, let's rely on a custom Delete button in the UI for cascading delete, 
+        // as the default Backspace key might just remove the node and leave orphans.
+        // To force cascading on Backspace, we'd need to handle onKeyDown or use the deleteKeyCode prop.
+
+        deletedNodes.forEach(node => {
+            deleteNode(node.id);
+        });
+    }, [deleteNode]);
 
     // Load initial data with layout if empty (optional, can be moved to App or store)
     useEffect(() => {
@@ -52,6 +98,8 @@ const OrgChartCanvas = () => {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onNodeDragStop={onNodeDragStop}
+                onNodesDelete={onNodesDelete}
                 nodeTypes={nodeTypes}
                 fitView
                 attributionPosition="bottom-right"
