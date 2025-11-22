@@ -79,6 +79,56 @@ const useStore = create((set, get) => ({
         });
     },
 
+    updateNodeData: (id, newData) => {
+        set((state) => {
+            const newNodes = state.nodes.map((node) => {
+                if (node.id === id) {
+                    return { ...node, data: { ...node.data, ...newData } };
+                }
+                return node;
+            });
+            const newState = { nodes: newNodes };
+            debouncedSave({ ...state, ...newState });
+            return newState;
+        });
+    },
+
+    addReport: (parentId) => {
+        const { nodes, edges, layoutNodes } = get();
+        const parentNode = nodes.find(n => n.id === parentId);
+        if (!parentNode) return;
+
+        const newId = `node-${Date.now()}`;
+        const newNode = {
+            id: newId,
+            type: 'org',
+            data: {
+                label: 'New Employee',
+                role: 'Role',
+                department: parentNode.data.department, // Inherit dept
+                color: parentNode.data.color, // Inherit color
+            },
+            position: { x: parentNode.position.x, y: parentNode.position.y + 100 }, // Initial pos
+        };
+
+        const newEdge = {
+            id: `e${parentId}-${newId}`,
+            source: parentId,
+            target: newId,
+            type: 'smoothstep',
+        };
+
+        set({
+            nodes: [...nodes, newNode],
+            edges: [...edges, newEdge]
+        });
+
+        // Trigger layout after a brief delay to allow render
+        setTimeout(() => {
+            get().layoutNodes('TB');
+        }, 10);
+    },
+
     // Persistence Actions
     loadChart: async () => {
         set({ isLoading: true, error: null });
