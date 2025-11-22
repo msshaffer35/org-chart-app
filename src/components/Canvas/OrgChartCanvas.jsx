@@ -35,16 +35,6 @@ const OrgChartCanvas = () => {
 
     const [activeOverlay, setActiveOverlay] = React.useState(null);
 
-    const onLayout = useCallback((direction) => {
-        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-            nodes,
-            edges,
-            direction
-        );
-        setNodes([...layoutedNodes]);
-        setEdges([...layoutedEdges]);
-    }, [nodes, edges, setNodes, setEdges]);
-
     const handleOverlayChange = (overlayType) => {
         if (activeOverlay === overlayType) {
             setActiveOverlay(null);
@@ -85,31 +75,17 @@ const OrgChartCanvas = () => {
         setNodes(newNodes);
     };
 
-    const handleFileUpload = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        parseCSV(file, ({ nodes: newNodes, edges: newEdges }) => {
-            const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-                newNodes,
-                newEdges,
-                'TB'
-            );
-            setNodes(layoutedNodes);
-            setEdges(layoutedEdges);
-        });
-    };
-
-    // Load initial data with layout
+    // Load initial data with layout if empty (optional, can be moved to App or store)
     useEffect(() => {
-        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-            initialNodes,
-            initialEdges,
-            'TB'
-        );
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
-    }, [setNodes, setEdges]);
+        if (nodes.length === 0 && initialNodes.length > 0) {
+            // Only load initial dummy data if store is empty and we haven't loaded anything
+            // But wait, loadChart runs on App mount.
+            // If we want to preserve the "demo" feel for a new user, we can check if loadChart returned empty.
+            // For now, let's disable this auto-reset to dummy data to avoid overwriting saved data.
+            // Or better, only set if we know we are in a "fresh" state.
+            // Let's just rely on the store's loadChart.
+        }
+    }, []);
 
     return (
         <div className="w-full h-full">
@@ -132,44 +108,6 @@ const OrgChartCanvas = () => {
                 }} />
 
                 <Panel position="top-left" className="flex flex-col gap-4">
-                    <div className="bg-white p-4 rounded-lg shadow-md flex flex-col gap-3 w-64">
-                        <div>
-                            <h2 className="font-bold text-gray-800 text-lg">Org Chart</h2>
-                            <p className="text-xs text-gray-500">Manage your organization structure</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="block text-sm font-medium text-gray-700">Import Data</label>
-                            <input
-                                type="file"
-                                accept=".csv"
-                                onChange={handleFileUpload}
-                                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-xs file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100
-                "
-                            />
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => onLayout('TB')}
-                                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700 transition-colors"
-                            >
-                                Vertical
-                            </button>
-                            <button
-                                onClick={() => onLayout('LR')}
-                                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700 transition-colors"
-                            >
-                                Horizontal
-                            </button>
-                        </div>
-                    </div>
-
                     <OverlayControls
                         activeOverlay={activeOverlay}
                         onToggleOverlay={handleOverlayChange}
