@@ -1,0 +1,11 @@
+EmployeeID,Name,Role,Department,ManagerID
+1,Sarah Jenkins,CEO,Executive,
+2,Mike Chen,VP Engineering,Engineering,1
+3,Lisa Wong,VP Product,Product,1
+4,James Smith,Head of Sales,Sales,1
+5,David Kim,Senior Engineer,Engineering,2
+6,Emily Davis,Product Manager,Product,3
+7,Tom Wilson,Sales Lead,Sales,4
+8,Anna Garcia,Frontend Dev,Engineering,5
+9,Chris Martin,Backend Dev,Engineering,5
+10,Jessica Taylor,Designer,Product,6
