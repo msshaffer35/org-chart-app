@@ -56,7 +56,12 @@ const MainLayout = ({ children }) => {
     return (
         <div className="flex flex-col h-screen w-screen overflow-hidden bg-gray-50">
             {/* Top Toolbar */}
-            <TopToolbar activeOverlay={activeOverlay} onToggleOverlay={handleOverlayChange} />
+            <TopToolbar
+                activeOverlay={activeOverlay}
+                onToggleOverlay={handleOverlayChange}
+                showRightPanel={showRightPanel}
+                onToggleRightPanel={() => setShowRightPanel(!showRightPanel)}
+            />
 
             <div className="flex-1 flex overflow-hidden relative">
                 {/* Mobile Toggle Buttons (Visible only on small screens) */}
@@ -84,10 +89,14 @@ const MainLayout = ({ children }) => {
 
                 {/* Right Panel */}
                 <div className={`
-                    fixed inset-y-0 right-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0
+                    fixed inset-y-0 right-0 z-40 transform transition-all duration-300 ease-in-out 
+                    md:relative md:translate-x-0
                     ${showRightPanel ? 'translate-x-0' : 'translate-x-full'}
+                    ${showRightPanel ? 'md:w-80' : 'md:w-0'}
                 `}>
-                    <RightPanel />
+                    <div className="w-80 h-full overflow-hidden">
+                        <RightPanel />
+                    </div>
                 </div>
 
                 {/* Mobile Overlay for Panels */}
