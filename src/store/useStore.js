@@ -129,6 +129,65 @@ const useStore = create((set, get) => ({
         }, 10);
     },
 
+    reparentNode: (childId, newParentId) => {
+        const { edges, nodes } = get();
+
+        // Prevent self-parenting
+        if (childId === newParentId) return;
+
+        // Prevent cycles (simple check: is newParent a descendant of child?)
+        const isDescendant = (parent, target) => {
+            const children = edges.filter(e => e.source === parent).map(e => e.target);
+            if (children.includes(target)) return true;
+            return children.some(child => isDescendant(child, target));
+        };
+        if (isDescendant(childId, newParentId)) {
+            alert("Cannot move a node under its own descendant.");
+            return;
+        }
+
+        // Remove existing parent edge
+        const newEdges = edges.filter(e => e.target !== childId);
+
+        // Add new edge
+        newEdges.push({
+            id: `e${newParentId}-${childId}`,
+            source: newParentId,
+            target: childId,
+            type: 'smoothstep',
+        });
+
+        set({ edges: newEdges });
+        debouncedSave(get());
+
+        // Auto-layout
+        setTimeout(() => {
+            get().layoutNodes('TB');
+        }, 10);
+    },
+
+    deleteNode: (nodeId) => {
+        const { nodes, edges } = get();
+
+        // Find all descendants recursively
+        const getDescendants = (id) => {
+            const children = edges.filter(e => e.source === id).map(e => e.target);
+            let descendants = [...children];
+            children.forEach(child => {
+                descendants = [...descendants, ...getDescendants(child)];
+            });
+            return descendants;
+        };
+
+        const nodesToDelete = [nodeId, ...getDescendants(nodeId)];
+
+        const newNodes = nodes.filter(n => !nodesToDelete.includes(n.id));
+        const newEdges = edges.filter(e => !nodesToDelete.includes(e.source) && !nodesToDelete.includes(e.target));
+
+        set({ nodes: newNodes, edges: newEdges });
+        debouncedSave(get());
+    },
+
     // Persistence Actions
     loadChart: async () => {
         set({ isLoading: true, error: null });
