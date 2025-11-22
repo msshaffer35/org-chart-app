@@ -7,6 +7,7 @@ const RightPanel = () => {
     const settings = useStore((state) => state.settings);
     const updateSettings = useStore((state) => state.updateSettings);
     const updateNodeData = useStore((state) => state.updateNodeData);
+    const updateParentEdgeStyle = useStore((state) => state.updateParentEdgeStyle);
 
     const selectedNode = nodes.find((n) => n.selected);
 
@@ -57,7 +58,7 @@ const RightPanel = () => {
                         {/* Styling */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-2">Header Color</label>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 mb-4">
                                 {['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-gray-500'].map(color => (
                                     <button
                                         key={color}
@@ -65,6 +66,22 @@ const RightPanel = () => {
                                         className={`w-8 h-8 rounded-full ${color} ${selectedNode.data.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
                                     />
                                 ))}
+                            </div>
+
+                            <label className="block text-xs font-medium text-gray-500 mb-2">Incoming Connection Style</label>
+                            <div className="flex bg-gray-100 p-1 rounded-md">
+                                <button
+                                    onClick={() => updateParentEdgeStyle(selectedNode.id, 'solid')}
+                                    className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all bg-white shadow text-gray-800 hover:bg-gray-50"
+                                >
+                                    Solid
+                                </button>
+                                <button
+                                    onClick={() => updateParentEdgeStyle(selectedNode.id, 'dotted')}
+                                    className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                                >
+                                    Dotted
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -97,9 +114,9 @@ const RightPanel = () => {
                             />
                         </div>
 
-                        {/* Line Style */}
+                        {/* Connection Style */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Connection Style</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Connection Type</label>
                             <div className="flex bg-gray-100 p-1 rounded-md">
                                 <button
                                     onClick={() => updateSettings({ edgeType: 'smoothstep' })}
@@ -119,6 +136,144 @@ const RightPanel = () => {
                                 >
                                     Straight
                                 </button>
+                            </div>
+                        </div>
+
+                        {/* Visibility Toggles */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Visible Fields</label>
+                            <div className="space-y-2">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.name ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, name: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Name</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.role ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, role: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Role</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.department ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, department: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Department</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.image ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, image: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Image</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Conditional Formatting */}
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium text-gray-700">Conditional Formatting</label>
+                                <button
+                                    onClick={() => {
+                                        const newRule = {
+                                            id: Date.now(),
+                                            field: 'department',
+                                            operator: 'equals',
+                                            value: '',
+                                            color: 'bg-red-500'
+                                        };
+                                        updateSettings({ formattingRules: [...(settings.formattingRules || []), newRule] });
+                                    }}
+                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                    + Add Rule
+                                </button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {(settings.formattingRules || []).map((rule, index) => (
+                                    <div key={rule.id} className="p-3 bg-gray-50 rounded-md border border-gray-200 text-sm space-y-2">
+                                        <div className="flex gap-2">
+                                            <select
+                                                value={rule.field}
+                                                onChange={(e) => {
+                                                    const newRules = [...settings.formattingRules];
+                                                    newRules[index].field = e.target.value;
+                                                    updateSettings({ formattingRules: newRules });
+                                                }}
+                                                className="flex-1 p-1 border border-gray-300 rounded text-xs"
+                                            >
+                                                <option value="department">Department</option>
+                                                <option value="role">Role</option>
+                                            </select>
+                                            <select
+                                                value={rule.operator}
+                                                onChange={(e) => {
+                                                    const newRules = [...settings.formattingRules];
+                                                    newRules[index].operator = e.target.value;
+                                                    updateSettings({ formattingRules: newRules });
+                                                }}
+                                                className="w-20 p-1 border border-gray-300 rounded text-xs"
+                                            >
+                                                <option value="equals">Is</option>
+                                                <option value="contains">Contains</option>
+                                            </select>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            placeholder="Value..."
+                                            value={rule.value}
+                                            onChange={(e) => {
+                                                const newRules = [...settings.formattingRules];
+                                                newRules[index].value = e.target.value;
+                                                updateSettings({ formattingRules: newRules });
+                                            }}
+                                            className="w-full p-1 border border-gray-300 rounded text-xs"
+                                        />
+
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex gap-1">
+                                                {['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-gray-500'].map(color => (
+                                                    <button
+                                                        key={color}
+                                                        onClick={() => {
+                                                            const newRules = [...settings.formattingRules];
+                                                            newRules[index].color = color;
+                                                            updateSettings({ formattingRules: newRules });
+                                                        }}
+                                                        className={`w-4 h-4 rounded-full ${color} ${rule.color === color ? 'ring-1 ring-offset-1 ring-gray-400' : ''}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const newRules = settings.formattingRules.filter((_, i) => i !== index);
+                                                    updateSettings({ formattingRules: newRules });
+                                                }}
+                                                className="text-xs text-red-500 hover:text-red-700"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(settings.formattingRules || []).length === 0 && (
+                                    <p className="text-xs text-gray-400 italic text-center py-2">No rules defined</p>
+                                )}
                             </div>
                         </div>
                     </div>
