@@ -33,6 +33,12 @@ const useStore = create((set, get) => ({
         spacing: 100,
         layoutDirection: 'TB',
         edgeType: 'smoothstep',
+        visibleFields: {
+            name: true,
+            role: true,
+            department: true,
+            image: true,
+        },
     },
 
     onNodesChange: (changes) => {
@@ -69,7 +75,7 @@ const useStore = create((set, get) => ({
     updateSettings: (newSettings) => {
         set((state) => {
             const updatedSettings = { ...state.settings, ...newSettings };
-            
+
             // If edge type changed, update all edges
             let newEdges = state.edges;
             if (newSettings.edgeType && newSettings.edgeType !== state.settings.edgeType) {
@@ -80,7 +86,7 @@ const useStore = create((set, get) => ({
             debouncedSave({ ...state, ...newState });
             return newState;
         });
-        
+
         // Trigger layout if spacing or direction changed
         if (newSettings.spacing || newSettings.layoutDirection) {
             get().layoutNodes();
@@ -91,10 +97,10 @@ const useStore = create((set, get) => ({
         const { nodes, edges, settings } = get();
         // Use passed direction or fallback to settings
         const dir = direction || settings.layoutDirection;
-        
+
         // Update settings if direction explicitly passed
         if (direction && direction !== settings.layoutDirection) {
-             set(state => ({ settings: { ...state.settings, layoutDirection: direction } }));
+            set(state => ({ settings: { ...state.settings, layoutDirection: direction } }));
         }
 
         const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(

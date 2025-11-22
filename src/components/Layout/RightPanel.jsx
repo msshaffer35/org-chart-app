@@ -121,6 +121,49 @@ const RightPanel = () => {
                                 </button>
                             </div>
                         </div>
+
+                        {/* Visibility Toggles */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Visible Fields</label>
+                            <div className="space-y-2">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.name ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, name: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Name</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.role ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, role: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Role</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.department ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, department: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Department</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.visibleFields?.image ?? true}
+                                        onChange={(e) => updateSettings({ visibleFields: { ...settings.visibleFields, image: e.target.checked } })}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-600">Show Image</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

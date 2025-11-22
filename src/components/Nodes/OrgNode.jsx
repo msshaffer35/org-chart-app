@@ -38,6 +38,9 @@ const OrgNode = ({ id, data, selected }) => {
         }
     };
 
+    const settings = useStore((state) => state.settings);
+    const { visibleFields } = settings;
+
     return (
         <div className={`
             group relative w-64 bg-white rounded-lg shadow-lg border transition-all duration-200
@@ -49,65 +52,76 @@ const OrgNode = ({ id, data, selected }) => {
             <div className="p-4">
                 <div className="flex items-center space-x-3 mb-3">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shrink-0">
-                        {data.image ? (
-                            <img src={data.image} alt={data.label} className="w-full h-full object-cover" />
-                        ) : (
-                            <User className="w-6 h-6 text-gray-400" />
-                        )}
-                    </div>
+                    {visibleFields.image && (
+                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shrink-0">
+                            {data.image ? (
+                                <img src={data.image} alt={data.label} className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="w-6 h-6 text-gray-400" />
+                            )}
+                        </div>
+                    )}
 
                     {/* Name & Role */}
                     <div className="flex-1 min-w-0">
-                        {isEditingName ? (
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                onBlur={handleNameSubmit}
-                                onKeyDown={(e) => handleKeyDown(e, handleNameSubmit)}
-                                autoFocus
-                                className="w-full font-bold text-gray-800 text-sm border-b border-blue-500 outline-none bg-transparent p-0"
-                            />
-                        ) : (
-                            <h3
-                                className="font-bold text-gray-800 text-sm truncate cursor-text hover:bg-gray-50 rounded px-1 -ml-1"
-                                onClick={() => setIsEditingName(true)}
-                            >
-                                {data.label}
-                            </h3>
-                        )}
-
-                        <div className="flex items-center text-gray-500 mt-0.5">
-                            <Briefcase className="w-3 h-3 mr-1 shrink-0" />
-                            {isEditingRole ? (
+                        {(visibleFields.name ?? true) && (
+                            isEditingName ? (
                                 <input
                                     type="text"
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value)}
-                                    onBlur={handleRoleSubmit}
-                                    onKeyDown={(e) => handleKeyDown(e, handleRoleSubmit)}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    onBlur={handleNameSubmit}
+                                    onKeyDown={(e) => handleKeyDown(e, handleNameSubmit)}
                                     autoFocus
-                                    className="w-full text-xs border-b border-blue-500 outline-none bg-transparent p-0"
+                                    className="w-full font-bold text-gray-800 text-sm border-b border-blue-500 outline-none bg-transparent p-0"
                                 />
                             ) : (
-                                <p
-                                    className="text-xs truncate cursor-text hover:bg-gray-50 rounded px-1 -ml-1"
-                                    onClick={() => setIsEditingRole(true)}
+                                <h3
+                                    className="font-bold text-gray-800 text-sm truncate cursor-text hover:bg-gray-50 rounded px-1 -ml-1"
+                                    onClick={() => setIsEditingName(true)}
                                 >
-                                    {data.role || 'Employee'}
-                                </p>
-                            )}
-                        </div>
+                                    {data.label}
+                                </h3>
+                            )
+                        )}
+
+                        {visibleFields.role && (
+                            <div className="flex items-center text-gray-500 mt-0.5">
+                                <Briefcase className="w-3 h-3 mr-1 shrink-0" />
+                                {isEditingRole ? (
+                                    <input
+                                        type="text"
+                                        value={role}
+                                        onChange={(e) => setRole(e.target.value)}
+                                        onBlur={handleRoleSubmit}
+                                        onKeyDown={(e) => handleKeyDown(e, handleRoleSubmit)}
+                                        autoFocus
+                                        className="w-full text-xs border-b border-blue-500 outline-none bg-transparent p-0"
+                                    />
+                                ) : (
+                                    <p
+                                        className="text-xs truncate cursor-text hover:bg-gray-50 rounded px-1 -ml-1"
+                                        onClick={() => setIsEditingRole(true)}
+                                    >
+                                        {data.role || 'Employee'}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Department / Meta */}
                 <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
-                    <div className="flex items-center text-xs text-gray-500">
-                        <Building className="w-3 h-3 mr-1" />
-                        {data.department || 'General'}
-                    </div>
+                    {visibleFields.department ? (
+                        <div className="flex items-center text-xs text-gray-500">
+                            <Building className="w-3 h-3 mr-1" />
+                            {data.department || 'General'}
+                        </div>
+                    ) : (
+                        <div /> /* Spacer */
+                    )}
+
                     {/* Overlay Badges */}
                     {data.badges && (
                         <div className="flex space-x-1">
