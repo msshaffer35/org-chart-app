@@ -1,14 +1,14 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { UserPlus, FilePlus, Trash2, Upload } from 'lucide-react';
 import useStore from '../../store/useStore';
-import { parseCSV } from '../../utils/csvImporter';
 import { getLayoutedElements } from '../../utils/layout';
+import ImportModal from '../Import/ImportModal';
 
 const LeftPanel = () => {
     const resetChart = useStore((state) => state.resetChart);
     const setNodes = useStore((state) => state.setNodes);
     const setEdges = useStore((state) => state.setEdges);
-    const fileInputRef = useRef(null);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const onDragStart = (event, nodeType) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
@@ -21,26 +21,45 @@ const LeftPanel = () => {
         }
     };
 
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-    };
+    const handleImportData = (mappedData) => {
+        const nodes = [];
+        const edges = [];
 
-    const handleFileUpload = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+        mappedData.forEach((row) => {
+            if (!row.id) return;
 
-        parseCSV(file, ({ nodes: newNodes, edges: newEdges }) => {
-            const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-                newNodes,
-                newEdges,
-                'TB'
-            );
-            setNodes(layoutedNodes);
-            setEdges(layoutedEdges);
+            // Create Node
+            nodes.push({
+                id: row.id,
+                type: 'org',
+                data: {
+                    label: row.name,
+                    role: row.role,
+                    department: row.department,
+                    image: row.image,
+                    color: 'bg-blue-500', // Default color
+                },
+                position: { x: 0, y: 0 },
+            });
+
+            // Create Edge
+            if (row.managerId) {
+                edges.push({
+                    id: `e${row.managerId}-${row.id}`,
+                    source: row.managerId,
+                    target: row.id,
+                    type: 'smoothstep',
+                });
+            }
         });
 
-        // Reset input
-        event.target.value = '';
+        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+            nodes,
+            edges,
+            'TB'
+        );
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
     };
 
     return (
@@ -62,19 +81,12 @@ const LeftPanel = () => {
                         New Chart
                     </button>
                     <button
-                        onClick={handleImportClick}
+                        onClick={() => setIsImportModalOpen(true)}
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors border border-gray-200"
                     >
                         <Upload size={16} />
                         Import CSV
                     </button>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        accept=".csv"
-                        className="hidden"
-                    />
                 </div>
 
                 <div className="space-y-2">
@@ -100,6 +112,12 @@ const LeftPanel = () => {
                     v1.0.0 • Local Storage
                 </p>
             </div>
+
+            <ImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={handleImportData}
+            />
         </aside>
     );
 };
