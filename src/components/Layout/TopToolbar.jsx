@@ -2,7 +2,7 @@ import React from 'react';
 import { Layers, ArrowDown, ArrowRight, Settings, Trash2 } from 'lucide-react';
 import useStore from '../../store/useStore';
 
-const TopToolbar = ({ activeOverlay, onToggleOverlay }) => {
+const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRightPanel }) => {
     const layoutNodes = useStore((state) => state.layoutNodes);
     const deleteNode = useStore((state) => state.deleteNode);
     const nodes = useStore((state) => state.nodes);
@@ -85,7 +85,11 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay }) => {
                         <Trash2 size={20} />
                     </button>
                 )}
-                <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+                <button
+                    onClick={onToggleRightPanel}
+                    className={`p-2 rounded-full transition-colors ${showRightPanel ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
+                    title="Toggle Properties Panel"
+                >
                     <Settings size={20} />
                 </button>
             </div>

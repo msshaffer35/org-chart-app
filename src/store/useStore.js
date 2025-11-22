@@ -29,6 +29,12 @@ const useStore = create((set, get) => ({
     isLoading: false,
     error: null,
 
+    settings: {
+        spacing: 100,
+        layoutDirection: 'TB',
+        edgeType: 'smoothstep',
+    },
+
     onNodesChange: (changes) => {
         set({
             nodes: applyNodeChanges(changes, get().nodes),
@@ -44,8 +50,9 @@ const useStore = create((set, get) => ({
     },
 
     onConnect: (connection) => {
+        const { settings } = get();
         set({
-            edges: addEdge(connection, get().edges),
+            edges: addEdge({ ...connection, type: settings.edgeType }, get().edges),
         });
         debouncedSave(get());
     },
@@ -59,12 +66,42 @@ const useStore = create((set, get) => ({
         debouncedSave(get());
     },
 
-    layoutNodes: (direction = 'TB') => {
-        const { nodes, edges } = get();
+    updateSettings: (newSettings) => {
+        set((state) => {
+            const updatedSettings = { ...state.settings, ...newSettings };
+            
+            // If edge type changed, update all edges
+            let newEdges = state.edges;
+            if (newSettings.edgeType && newSettings.edgeType !== state.settings.edgeType) {
+                newEdges = state.edges.map(e => ({ ...e, type: newSettings.edgeType }));
+            }
+
+            const newState = { settings: updatedSettings, edges: newEdges };
+            debouncedSave({ ...state, ...newState });
+            return newState;
+        });
+        
+        // Trigger layout if spacing or direction changed
+        if (newSettings.spacing || newSettings.layoutDirection) {
+            get().layoutNodes();
+        }
+    },
+
+    layoutNodes: (direction) => {
+        const { nodes, edges, settings } = get();
+        // Use passed direction or fallback to settings
+        const dir = direction || settings.layoutDirection;
+        
+        // Update settings if direction explicitly passed
+        if (direction && direction !== settings.layoutDirection) {
+             set(state => ({ settings: { ...state.settings, layoutDirection: direction } }));
+        }
+
         const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
             nodes,
             edges,
-            direction
+            dir,
+            settings.spacing // Pass spacing to layout util (need to update util)
         );
         set({ nodes: [...layoutedNodes], edges: [...layoutedEdges] });
         debouncedSave(get());

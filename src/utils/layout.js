@@ -3,11 +3,15 @@ import dagre from 'dagre';
 const nodeWidth = 256; // Width of OrgNode (w-64 = 16rem = 256px)
 const nodeHeight = 140; // Approx height
 
-export const getLayoutedElements = (nodes, edges, direction = 'TB') => {
+export const getLayoutedElements = (nodes, edges, direction = 'TB', spacing = 100) => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-    dagreGraph.setGraph({ rankdir: direction });
+    dagreGraph.setGraph({
+        rankdir: direction,
+        ranksep: spacing,
+        nodesep: spacing / 2 // Usually nodesep is smaller than ranksep
+    });
 
     nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
