@@ -39,7 +39,29 @@ const OrgNode = ({ id, data, selected }) => {
     };
 
     const settings = useStore((state) => state.settings);
-    const { visibleFields } = settings;
+    const { visibleFields, formattingRules } = settings;
+
+    // Calculate effective color based on rules
+    let effectiveColor = data.color || 'bg-blue-500';
+    if (formattingRules && formattingRules.length > 0) {
+        for (const rule of formattingRules) {
+            const fieldValue = data[rule.field]?.toString().toLowerCase() || '';
+            const ruleValue = rule.value.toLowerCase();
+
+            let match = false;
+            if (rule.operator === 'equals') {
+                match = fieldValue === ruleValue;
+            } else if (rule.operator === 'contains') {
+                match = fieldValue.includes(ruleValue);
+            }
+
+            if (match) {
+                effectiveColor = rule.color;
+                // Last rule wins? Or first? Let's say last rule wins for now (CSS style)
+                // If we want first rule wins, we'd break here.
+            }
+        }
+    }
 
     return (
         <div className={`
@@ -47,7 +69,7 @@ const OrgNode = ({ id, data, selected }) => {
             ${selected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:shadow-xl'}
         `}>
             {/* Header / Color Strip */}
-            <div className={`h-2 w-full rounded-t-lg ${data.color || 'bg-blue-500'}`} />
+            <div className={`h-2 w-full rounded-t-lg ${effectiveColor}`} />
 
             <div className="p-4">
                 <div className="flex items-center space-x-3 mb-3">

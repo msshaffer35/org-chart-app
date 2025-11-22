@@ -33,12 +33,14 @@ const useStore = create((set, get) => ({
         spacing: 100,
         layoutDirection: 'TB',
         edgeType: 'smoothstep',
+        edgeStroke: 'solid', // 'solid' or 'dotted'
         visibleFields: {
             name: true,
             role: true,
             department: true,
             image: true,
         },
+        formattingRules: [], // { id, field, operator, value, color }
     },
 
     onNodesChange: (changes) => {
@@ -57,8 +59,9 @@ const useStore = create((set, get) => ({
 
     onConnect: (connection) => {
         const { settings } = get();
+        const edgeStyle = settings.edgeStroke === 'dotted' ? { strokeDasharray: '5,5' } : {};
         set({
-            edges: addEdge({ ...connection, type: settings.edgeType }, get().edges),
+            edges: addEdge({ ...connection, type: settings.edgeType, style: edgeStyle }, get().edges),
         });
         debouncedSave(get());
     },
@@ -76,10 +79,16 @@ const useStore = create((set, get) => ({
         set((state) => {
             const updatedSettings = { ...state.settings, ...newSettings };
 
-            // If edge type changed, update all edges
+            // If edge type or stroke changed, update all edges
             let newEdges = state.edges;
+
             if (newSettings.edgeType && newSettings.edgeType !== state.settings.edgeType) {
-                newEdges = state.edges.map(e => ({ ...e, type: newSettings.edgeType }));
+                newEdges = newEdges.map(e => ({ ...e, type: newSettings.edgeType }));
+            }
+
+            if (newSettings.edgeStroke && newSettings.edgeStroke !== state.settings.edgeStroke) {
+                const style = newSettings.edgeStroke === 'dotted' ? { strokeDasharray: '5,5' } : {};
+                newEdges = newEdges.map(e => ({ ...e, style }));
             }
 
             const newState = { settings: updatedSettings, edges: newEdges };
@@ -136,6 +145,23 @@ const useStore = create((set, get) => ({
         });
     },
 
+    updateParentEdgeStyle: (nodeId, styleType) => {
+        set((state) => {
+            const newEdges = state.edges.map((edge) => {
+                if (edge.target === nodeId) {
+                    return {
+                        ...edge,
+                        style: styleType === 'dotted' ? { strokeDasharray: '5,5' } : {}
+                    };
+                }
+                return edge;
+            });
+            const newState = { edges: newEdges };
+            debouncedSave({ ...state, ...newState });
+            return newState;
+        });
+    },
+
     addReport: (parentId) => {
         const { nodes, edges, layoutNodes } = get();
         const parentNode = nodes.find(n => n.id === parentId);
@@ -154,11 +180,15 @@ const useStore = create((set, get) => ({
             position: { x: parentNode.position.x, y: parentNode.position.y + 100 }, // Initial pos
         };
 
+        const { settings } = get();
+        const edgeStyle = settings.edgeStroke === 'dotted' ? { strokeDasharray: '5,5' } : {};
+
         const newEdge = {
             id: `e${parentId}-${newId}`,
             source: parentId,
             target: newId,
-            type: 'smoothstep',
+            type: settings.edgeType || 'smoothstep',
+            style: edgeStyle,
         };
 
         set({
@@ -192,12 +222,16 @@ const useStore = create((set, get) => ({
         // Remove existing parent edge
         const newEdges = edges.filter(e => e.target !== childId);
 
+        const { settings } = get();
+        const edgeStyle = settings.edgeStroke === 'dotted' ? { strokeDasharray: '5,5' } : {};
+
         // Add new edge
         newEdges.push({
             id: `e${newParentId}-${childId}`,
             source: newParentId,
             target: childId,
-            type: 'smoothstep',
+            type: settings.edgeType || 'smoothstep',
+            style: edgeStyle,
         });
 
         set({ edges: newEdges });
