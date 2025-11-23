@@ -14,12 +14,12 @@ export const storageService = {
         }
     },
 
-    createProject: (name) => {
+    createProject: (metadata) => {
         try {
             const projects = storageService.getProjects();
             const newProject = {
                 id: crypto.randomUUID(),
-                name: name || 'Untitled Project',
+                ...metadata, // { account, department, dateCollected }
                 lastModified: Date.now(),
             };
             projects.push(newProject);

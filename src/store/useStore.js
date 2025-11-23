@@ -280,9 +280,9 @@ const useStore = create((set, get) => ({
         set({ projectList: projects });
     },
 
-    createProject: async (name) => {
+    createProject: async (metadata) => {
         try {
-            const id = await storageService.createProject(name);
+            const id = await storageService.createProject(metadata);
             get().loadProjects();
             return id;
         } catch (error) {
