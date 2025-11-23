@@ -107,6 +107,18 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRi
                             <Layers size={14} />
                             Sub-Function
                         </button>
+                        <button
+                            onClick={() => onToggleOverlay('employeeType')}
+                            className={`
+                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
+                                ${activeOverlay && activeOverlay.includes('employeeType')
+                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
+                            `}
+                        >
+                            <Users size={14} />
+                            Employee Type
+                        </button>
                     </div>
                 </div>
             </div>
@@ -129,18 +141,7 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRi
                 >
                     <Settings size={20} />
                 </button>
-                <button
-                    onClick={() => onToggleOverlay('employeeType')}
-                    className={`
-                        px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
-                        ${activeOverlay && activeOverlay.includes('employeeType')
-                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
-                    `}
-                >
-                    <Users size={14} />
-                    Employee Type
-                </button>
+
             </div>
         </div>
     );
