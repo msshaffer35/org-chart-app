@@ -126,6 +126,199 @@ const RightPanel = () => {
                                     </div>
                                 </div>
 
+                                {/* Employee Details */}
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Employee Details</h3>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Employee Type</label>
+                                        <select
+                                            value={selectedNode.data.employeeType || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { employeeType: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                        >
+                                            <option value="">Select Type...</option>
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contractor">Contractor</option>
+                                            <option value="Vendor">Vendor</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Role / Remit</label>
+                                        <textarea
+                                            value={selectedNode.data.roleRemit || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { roleRemit: e.target.value })}
+                                            placeholder="Describe the role or remit..."
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[60px]"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Comments / Notes</label>
+                                        <textarea
+                                            value={selectedNode.data.comments || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { comments: e.target.value })}
+                                            placeholder="Add notes here..."
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[80px]"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Team Types */}
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Team Types</h3>
+
+                                    {/* Scrum Team */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Scrum Team</label>
+                                        <select
+                                            value={selectedNode.data.teamType?.scrum || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, {
+                                                teamType: { ...selectedNode.data.teamType, scrum: e.target.value }
+                                            })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                        >
+                                            <option value="">None</option>
+                                            <option value="Team A">Team A</option>
+                                            <option value="Team B">Team B</option>
+                                            <option value="Team C">Team C</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Center of Excellence */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Center of Excellence</label>
+                                        <select
+                                            value={selectedNode.data.teamType?.coe || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, {
+                                                teamType: { ...selectedNode.data.teamType, coe: e.target.value }
+                                            })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                        >
+                                            <option value="">None</option>
+                                            <option value="Digital">Digital</option>
+                                            <option value="AI">AI</option>
+                                            <option value="Data">Data</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Regions Supported */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-2">Regions Supported</label>
+                                        <div className="space-y-2">
+                                            {['US', 'Global', 'EMEA', 'APAC'].map(region => (
+                                                <label key={region} className="flex items-center space-x-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedNode.data.teamType?.regions?.includes(region) || false}
+                                                        onChange={(e) => {
+                                                            const currentRegions = selectedNode.data.teamType?.regions || [];
+                                                            let newRegions;
+                                                            if (e.target.checked) {
+                                                                newRegions = [...currentRegions, region];
+                                                            } else {
+                                                                newRegions = currentRegions.filter(r => r !== region);
+                                                            }
+                                                            updateNodeData(selectedNode.id, {
+                                                                teamType: { ...selectedNode.data.teamType, regions: newRegions }
+                                                            });
+                                                        }}
+                                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-sm text-gray-600">{region}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Functions & Sub-Functions (Nested) */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-2">Functions & Sub-Functions</label>
+                                        <div className="space-y-3">
+                                            {['HR', 'Finance', 'Sales', 'Marketing', 'Other'].map(func => {
+                                                const isFunctionSelected = selectedNode.data.teamType?.functions?.includes(func);
+
+                                                // Define sub-functions for this function
+                                                const subFunctionMapping = {
+                                                    'HR': ['People Ops', 'Recruitment', 'Other (HR)'],
+                                                    'Finance': ['Corporate', 'Accounting', 'Other (Finance)'],
+                                                    'Sales': ['Field', 'HQ Support', 'Other (Sales)'],
+                                                    'Marketing': ['B2B', 'Consumer', 'Other (Marketing)']
+                                                };
+                                                const subFunctions = subFunctionMapping[func] || (func === 'Other' ? ['Other'] : []);
+
+                                                return (
+                                                    <div key={func} className="flex flex-col">
+                                                        {/* Parent Function */}
+                                                        <label className="flex items-center space-x-2 cursor-pointer mb-1">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isFunctionSelected || false}
+                                                                onChange={(e) => {
+                                                                    const currentFunctions = selectedNode.data.teamType?.functions || [];
+                                                                    let newFunctions;
+                                                                    if (e.target.checked) {
+                                                                        newFunctions = [...currentFunctions, func];
+                                                                    } else {
+                                                                        newFunctions = currentFunctions.filter(f => f !== func);
+                                                                        // Remove associated sub-functions when parent is unchecked
+                                                                        const currentSubFunctions = selectedNode.data.teamType?.subFunctions || [];
+                                                                        const newSubFunctions = currentSubFunctions.filter(sf => !subFunctions.includes(sf));
+
+                                                                        updateNodeData(selectedNode.id, {
+                                                                            teamType: {
+                                                                                ...selectedNode.data.teamType,
+                                                                                functions: newFunctions,
+                                                                                subFunctions: newSubFunctions
+                                                                            }
+                                                                        });
+                                                                        return;
+                                                                    }
+                                                                    updateNodeData(selectedNode.id, {
+                                                                        teamType: { ...selectedNode.data.teamType, functions: newFunctions }
+                                                                    });
+                                                                }}
+                                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                            />
+                                                            <span className="text-sm font-medium text-gray-700">{func}</span>
+                                                        </label>
+
+                                                        {/* Nested Sub-Functions */}
+                                                        {isFunctionSelected && subFunctions.length > 0 && (
+                                                            <div className="ml-6 space-y-1 border-l-2 border-gray-100 pl-2 mt-1">
+                                                                {subFunctions.map(subFunc => (
+                                                                    <label key={subFunc} className="flex items-center space-x-2 cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={selectedNode.data.teamType?.subFunctions?.includes(subFunc) || false}
+                                                                            onChange={(e) => {
+                                                                                const currentSubFunctions = selectedNode.data.teamType?.subFunctions || [];
+                                                                                let newSubFunctions;
+                                                                                if (e.target.checked) {
+                                                                                    newSubFunctions = [...currentSubFunctions, subFunc];
+                                                                                } else {
+                                                                                    newSubFunctions = currentSubFunctions.filter(sf => sf !== subFunc);
+                                                                                }
+                                                                                updateNodeData(selectedNode.id, {
+                                                                                    teamType: { ...selectedNode.data.teamType, subFunctions: newSubFunctions }
+                                                                                });
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-3 h-3"
+                                                                        />
+                                                                        <span className="text-xs text-gray-600">{subFunc}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Styling */}
                                 <div>
                                     <label className="block text-xs font-medium text-gray-500 mb-2">Header Color</label>

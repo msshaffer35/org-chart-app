@@ -10,43 +10,119 @@ const MainLayout = ({ children }) => {
     const [showRightPanel, setShowRightPanel] = useState(true);
 
     // Lifted state for Overlays (passed to TopToolbar and Children)
-    const [activeOverlay, setActiveOverlay] = useState(null);
+    const [activeOverlays, setActiveOverlays] = useState([]);
     const { nodes, setNodes } = useStore();
 
     const handleOverlayChange = (overlayType) => {
-        if (activeOverlay === overlayType) {
-            setActiveOverlay(null);
-            // Reset nodes
-            setNodes(nodes.map(n => ({
-                ...n,
-                data: { ...n.data, badges: [], overlay: null }
-            })));
-            return;
+        let newOverlays;
+        if (activeOverlays.includes(overlayType)) {
+            newOverlays = activeOverlays.filter(o => o !== overlayType);
+        } else {
+            newOverlays = [...activeOverlays, overlayType];
         }
+        setActiveOverlays(newOverlays);
 
-        setActiveOverlay(overlayType);
-
-        // Apply mock overlay data
+        // Apply overlay data
         const newNodes = nodes.map(node => {
-            let badges = [];
-            let overlay = null;
+            let overlayFields = [];
 
-            if (overlayType === 'skills') {
-                // Mock logic: Randomly assign skill gaps
-                if (Math.random() > 0.7) {
-                    badges = ['#ef4444']; // Red for gap
-                    overlay = 'skills';
+            // Scrum Overlay
+            if (newOverlays.includes('scrum')) {
+                const team = node.data.teamType?.scrum;
+                if (team) {
+                    const teamColors = {
+                        'Team A': '#3b82f6', // Blue
+                        'Team B': '#10b981', // Green
+                        'Team C': '#8b5cf6'  // Purple
+                    };
+                    if (teamColors[team]) {
+                        overlayFields.push({ label: 'Scrum Team', value: team, color: teamColors[team] });
+                    }
                 }
-            } else if (overlayType === 'scrum') {
-                // Mock logic: Assign random teams
-                const teams = ['#3b82f6', '#10b981', '#8b5cf6'];
-                badges = [teams[Math.floor(Math.random() * teams.length)]];
-                overlay = 'scrum';
+            }
+
+            // CoE Overlay
+            if (newOverlays.includes('coe')) {
+                const coe = node.data.teamType?.coe;
+                if (coe) {
+                    const coeColors = {
+                        'Digital': '#ec4899', // Pink
+                        'AI': '#8b5cf6',      // Violet
+                        'Data': '#f59e0b'     // Amber
+                    };
+                    if (coeColors[coe]) {
+                        overlayFields.push({ label: 'CoE', value: coe, color: coeColors[coe] });
+                    }
+                }
+            }
+
+            // Regions Overlay
+            if (newOverlays.includes('regions')) {
+                const regions = node.data.teamType?.regions || [];
+
+                // For text, we show a comma-separated list
+                if (regions.length > 0) {
+                    overlayFields.push({
+                        label: 'Regions',
+                        value: regions.join(', '),
+                        color: '#6b7280' // Gray for text label since it can be multiple colors
+                    });
+                }
+            }
+
+            // Function Overlay
+            if (newOverlays.includes('function')) {
+                const functions = node.data.teamType?.functions || [];
+                if (functions.length > 0) {
+                    // Use the color of the first function, or a default mix
+                    const functionColors = {
+                        'HR': '#e879f9',      // Fuchsia
+                        'Finance': '#22c55e', // Green
+                        'Sales': '#3b82f6',   // Blue
+                        'Marketing': '#f97316', // Orange
+                        'Other': '#9ca3af'    // Gray
+                    };
+                    const color = functionColors[functions[0]] || '#6b7280';
+
+                    overlayFields.push({
+                        label: 'Function',
+                        value: functions.join(', '),
+                        color: color
+                    });
+                }
+            }
+
+            // Sub-Function Overlay
+            if (newOverlays.includes('subFunction')) {
+                const subFunctions = node.data.teamType?.subFunctions || [];
+                if (subFunctions.length > 0) {
+                    overlayFields.push({
+                        label: 'Sub-Function',
+                        value: subFunctions.join(', '),
+                        color: '#0d9488' // Teal
+                    });
+                }
+            }
+
+            // Employee Type Overlay
+            if (newOverlays.includes('employeeType')) {
+                const type = node.data.employeeType;
+                if (type) {
+                    const typeColors = {
+                        'Full-time': '#3b82f6',   // Blue
+                        'Part-time': '#eab308',   // Yellow
+                        'Contractor': '#f97316',  // Orange
+                        'Vendor': '#a855f7'       // Purple
+                    };
+                    if (typeColors[type]) {
+                        overlayFields.push({ label: 'Type', value: type, color: typeColors[type] });
+                    }
+                }
             }
 
             return {
                 ...node,
-                data: { ...node.data, badges, overlay }
+                data: { ...node.data, overlayFields }
             };
         });
 
@@ -57,7 +133,7 @@ const MainLayout = ({ children }) => {
         <div className="flex flex-col h-screen w-screen overflow-hidden bg-gray-50">
             {/* Top Toolbar */}
             <TopToolbar
-                activeOverlay={activeOverlay}
+                activeOverlay={activeOverlays}
                 onToggleOverlay={handleOverlayChange}
                 showRightPanel={showRightPanel}
                 onToggleRightPanel={() => setShowRightPanel(!showRightPanel)}

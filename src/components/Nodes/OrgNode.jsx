@@ -133,8 +133,26 @@ const OrgNode = ({ id, data, selected }) => {
                     </div>
                 </div>
 
+                {/* Overlay Text Fields */}
+                {data.overlayFields && data.overlayFields.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                        {data.overlayFields.map((field, idx) => (
+                            <div key={idx} className="flex items-start text-xs">
+                                <span className="font-semibold text-gray-500 mr-1">{field.label}:</span>
+                                <span
+                                    className="font-medium whitespace-normal"
+                                    style={{ color: field.color }}
+                                    title={field.value}
+                                >
+                                    {field.value}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Department / Meta */}
-                <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
+                <div className="pt-3 border-t border-gray-100 flex justify-between items-center mt-2">
                     {visibleFields.department ? (
                         <div className="flex items-center text-xs text-gray-500">
                             <Building className="w-3 h-3 mr-1" />
@@ -142,15 +160,6 @@ const OrgNode = ({ id, data, selected }) => {
                         </div>
                     ) : (
                         <div /> /* Spacer */
-                    )}
-
-                    {/* Overlay Badges */}
-                    {data.badges && (
-                        <div className="flex space-x-1">
-                            {data.badges.map((badge, idx) => (
-                                <span key={idx} className="w-2 h-2 rounded-full" style={{ backgroundColor: badge }} />
-                            ))}
-                        </div>
                     )}
                 </div>
             </div>
