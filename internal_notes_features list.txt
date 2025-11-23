@@ -1,10 +1,7 @@
 features list:
 
 Name Box features:
-- Full-time, part-time, contractor, vendor tags per box
-- Comments/Notes text field for each person box
 - Headcount time allocation by function per person box
-- Summary of role/remit for each person box if we captured during interview
 
 Main Panel features:
 - For large org charts need a feature that allows you to zoom in or only see a subsection of the organization. For instance if 200 people in organization I may want to look at L1 team specifically to review that org without all the other clutter (maybe this is a filter on "department" or "person name" explained below)
@@ -14,7 +11,7 @@ Functionality:
 - Export chart to PPTX natively so you can make edits (e.g. not just an image)
 
 Project page features:
-- Pull the Function, Sub-Function, Classification tagging into the Project Page to be able to search and filter on them
+- Pull the Function, Sub-Function, Classification, etc... tagging into the Project Page to be able to search and filter on them
 - Need to add for projects a way to relate same accounts. This will be critical for tracking changes overtime and for relating org charts received at different times to have a comprehensive view of the organization
 
 
