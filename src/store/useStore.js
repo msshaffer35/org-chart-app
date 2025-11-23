@@ -33,6 +33,7 @@ const useStore = create((set, get) => ({
 
     // Project Management State
     currentProjectId: null,
+    currentProject: null, // { id, account, department, dateCollected, ... }
     projectList: [],
 
     settings: {
@@ -303,6 +304,11 @@ const useStore = create((set, get) => ({
         if (!projectId) return;
 
         set({ isLoading: true, error: null, currentProjectId: projectId });
+
+        // Load metadata
+        const metadata = storageService.getProjectMetadata(projectId);
+        set({ currentProject: metadata });
+
         try {
             const data = await storageService.loadProject(projectId);
             if (data) {

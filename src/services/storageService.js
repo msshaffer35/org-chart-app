@@ -14,6 +14,16 @@ export const storageService = {
         }
     },
 
+    getProjectMetadata: (id) => {
+        try {
+            const projects = storageService.getProjects();
+            return projects.find(p => p.id === id) || null;
+        } catch (error) {
+            console.error('Failed to load project metadata:', error);
+            return null;
+        }
+    },
+
     createProject: (metadata) => {
         try {
             const projects = storageService.getProjects();
