@@ -70,6 +70,40 @@ const MainLayout = ({ children }) => {
                 }
             }
 
+            // Function Overlay
+            if (newOverlays.includes('function')) {
+                const functions = node.data.teamType?.functions || [];
+                if (functions.length > 0) {
+                    // Use the color of the first function, or a default mix
+                    const functionColors = {
+                        'HR': '#e879f9',      // Fuchsia
+                        'Finance': '#22c55e', // Green
+                        'Sales': '#3b82f6',   // Blue
+                        'Marketing': '#f97316', // Orange
+                        'Other': '#9ca3af'    // Gray
+                    };
+                    const color = functionColors[functions[0]] || '#6b7280';
+
+                    overlayFields.push({
+                        label: 'Function',
+                        value: functions.join(', '),
+                        color: color
+                    });
+                }
+            }
+
+            // Sub-Function Overlay
+            if (newOverlays.includes('subFunction')) {
+                const subFunctions = node.data.teamType?.subFunctions || [];
+                if (subFunctions.length > 0) {
+                    overlayFields.push({
+                        label: 'Sub-Function',
+                        value: subFunctions.join(', '),
+                        color: '#0d9488' // Teal
+                    });
+                }
+            }
+
             return {
                 ...node,
                 data: { ...node.data, overlayFields }

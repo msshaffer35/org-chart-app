@@ -1,12 +1,11 @@
 features list:
 
-- Classification field (e.g. COE, etc...) for groups (like the scrum and agile feature). Would tag each person box with it
-- Sub department tagging for each person box
 - Function and Sub-Function tagging for each person box
-- Headcount time allocation by function per person box
 - Full-time, part-time, contractor, vendor tags per box
 - Comments/Notes field for each person box
+- Headcount time allocation by function per person box
 - Summary of role/remit for each person box if we captured during interview
+
 - For large org charts need a feature that allows you to zoom in or only see a subsection of the organization. For instance if 200 people in organization I may want to look at L1 team specifically to review that org without all the other clutter
 
 - Export chart to PPTX natively so you can make edits (e.g. not just an image)
@@ -34,3 +33,4 @@ features list:
 - Data storage layer
 	- Need to understand the data storage layer on this to run analysis outside the program
 	- Add place for attachment of word document interviews with specific people to align on what told us about their position
+	- Need to have separate databases: Actual Org chart collected & tagged, Future org chart scenarios, Blinded org charts to standardized definitions

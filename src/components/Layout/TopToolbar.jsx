@@ -83,6 +83,30 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRi
                             <Layers size={14} />
                             Regions
                         </button>
+                        <button
+                            onClick={() => onToggleOverlay('function')}
+                            className={`
+                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
+                                ${activeOverlay && activeOverlay.includes('function')
+                                    ? 'bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200'
+                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
+                            `}
+                        >
+                            <Layers size={14} />
+                            Function
+                        </button>
+                        <button
+                            onClick={() => onToggleOverlay('subFunction')}
+                            className={`
+                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
+                                ${activeOverlay && activeOverlay.includes('subFunction')
+                                    ? 'bg-teal-100 text-teal-700 border border-teal-200'
+                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
+                            `}
+                        >
+                            <Layers size={14} />
+                            Sub-Function
+                        </button>
                     </div>
                 </div>
             </div>

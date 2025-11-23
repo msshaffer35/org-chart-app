@@ -192,6 +192,90 @@ const RightPanel = () => {
                                             ))}
                                         </div>
                                     </div>
+
+                                    {/* Function (Multi-Select) */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-2">Function</label>
+                                        <div className="space-y-2">
+                                            {['HR', 'Finance', 'Sales', 'Marketing', 'Other'].map(func => (
+                                                <label key={func} className="flex items-center space-x-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedNode.data.teamType?.functions?.includes(func) || false}
+                                                        onChange={(e) => {
+                                                            const currentFunctions = selectedNode.data.teamType?.functions || [];
+                                                            let newFunctions;
+                                                            if (e.target.checked) {
+                                                                newFunctions = [...currentFunctions, func];
+                                                            } else {
+                                                                newFunctions = currentFunctions.filter(f => f !== func);
+                                                                // Also remove sub-functions related to this function if needed? 
+                                                                // For now, we keep it simple and let user manage sub-functions.
+                                                            }
+                                                            updateNodeData(selectedNode.id, {
+                                                                teamType: { ...selectedNode.data.teamType, functions: newFunctions }
+                                                            });
+                                                        }}
+                                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-sm text-gray-600">{func}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Sub-Function (Dependent Multi-Select) */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-2">Sub-Function</label>
+                                        <div className="space-y-2">
+                                            {(() => {
+                                                const selectedFunctions = selectedNode.data.teamType?.functions || [];
+                                                const subFunctionMapping = {
+                                                    'HR': ['People Ops', 'Recruitment', 'Other (HR)'],
+                                                    'Finance': ['Corporate', 'Accounting', 'Other (Finance)'],
+                                                    'Sales': ['Field', 'HQ Support', 'Other (Sales)'],
+                                                    'Marketing': ['B2B', 'Consumer', 'Other (Marketing)']
+                                                };
+
+                                                // Collect all available sub-functions based on selected functions
+                                                let availableSubFunctions = [];
+                                                selectedFunctions.forEach(func => {
+                                                    if (subFunctionMapping[func]) {
+                                                        availableSubFunctions = [...availableSubFunctions, ...subFunctionMapping[func]];
+                                                    } else if (func === 'Other') {
+                                                        availableSubFunctions.push('Other');
+                                                    }
+                                                });
+
+                                                if (availableSubFunctions.length === 0) {
+                                                    return <p className="text-xs text-gray-400 italic">Select a Function first</p>;
+                                                }
+
+                                                return availableSubFunctions.map(subFunc => (
+                                                    <label key={subFunc} className="flex items-center space-x-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedNode.data.teamType?.subFunctions?.includes(subFunc) || false}
+                                                            onChange={(e) => {
+                                                                const currentSubFunctions = selectedNode.data.teamType?.subFunctions || [];
+                                                                let newSubFunctions;
+                                                                if (e.target.checked) {
+                                                                    newSubFunctions = [...currentSubFunctions, subFunc];
+                                                                } else {
+                                                                    newSubFunctions = currentSubFunctions.filter(sf => sf !== subFunc);
+                                                                }
+                                                                updateNodeData(selectedNode.id, {
+                                                                    teamType: { ...selectedNode.data.teamType, subFunctions: newSubFunctions }
+                                                                });
+                                                            }}
+                                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <span className="text-sm text-gray-600">{subFunc}</span>
+                                                    </label>
+                                                ));
+                                            })()}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Styling */}
