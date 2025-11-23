@@ -51,13 +51,37 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRi
                             onClick={() => onToggleOverlay('scrum')}
                             className={`
                                 px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
-                                ${activeOverlay === 'scrum'
-                                    ? 'bg-green-100 text-green-700 border border-green-200'
+                                ${activeOverlay && activeOverlay.includes('scrum')
+                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
                                     : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
                             `}
                         >
                             <Layers size={14} />
                             Scrum Teams
+                        </button>
+                        <button
+                            onClick={() => onToggleOverlay('coe')}
+                            className={`
+                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
+                                ${activeOverlay && activeOverlay.includes('coe')
+                                    ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
+                            `}
+                        >
+                            <Layers size={14} />
+                            CoE
+                        </button>
+                        <button
+                            onClick={() => onToggleOverlay('regions')}
+                            className={`
+                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
+                                ${activeOverlay && activeOverlay.includes('regions')
+                                    ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
+                            `}
+                        >
+                            <Layers size={14} />
+                            Regions
                         </button>
                     </div>
                 </div>

@@ -10,29 +10,25 @@ const MainLayout = ({ children }) => {
     const [showRightPanel, setShowRightPanel] = useState(true);
 
     // Lifted state for Overlays (passed to TopToolbar and Children)
-    const [activeOverlay, setActiveOverlay] = useState(null);
+    const [activeOverlays, setActiveOverlays] = useState([]);
     const { nodes, setNodes } = useStore();
 
     const handleOverlayChange = (overlayType) => {
-        if (activeOverlay === overlayType) {
-            setActiveOverlay(null);
-            // Reset nodes
-            setNodes(nodes.map(n => ({
-                ...n,
-                data: { ...n.data, badges: [], overlay: null }
-            })));
-            return;
+        let newOverlays;
+        if (activeOverlays.includes(overlayType)) {
+            newOverlays = activeOverlays.filter(o => o !== overlayType);
+        } else {
+            newOverlays = [...activeOverlays, overlayType];
         }
+        setActiveOverlays(newOverlays);
 
-        setActiveOverlay(overlayType);
-
-        // Apply mock overlay data
+        // Apply overlay data
         const newNodes = nodes.map(node => {
             let badges = [];
-            let overlay = null;
+            let overlayFields = [];
 
-            if (overlayType === 'scrum') {
-                // Real logic: Assign color based on selected Scrum Team
+            // Scrum Overlay
+            if (newOverlays.includes('scrum')) {
                 const team = node.data.teamType?.scrum;
                 if (team) {
                     const teamColors = {
@@ -41,15 +37,58 @@ const MainLayout = ({ children }) => {
                         'Team C': '#8b5cf6'  // Purple
                     };
                     if (teamColors[team]) {
-                        badges = [teamColors[team]];
-                        overlay = 'scrum';
+                        badges.push({ color: teamColors[team], title: `Scrum: ${team}` });
+                        overlayFields.push({ label: 'Scrum Team', value: team, color: teamColors[team] });
                     }
+                }
+            }
+
+            // CoE Overlay
+            if (newOverlays.includes('coe')) {
+                const coe = node.data.teamType?.coe;
+                if (coe) {
+                    const coeColors = {
+                        'Digital': '#ec4899', // Pink
+                        'AI': '#8b5cf6',      // Violet
+                        'Data': '#f59e0b'     // Amber
+                    };
+                    if (coeColors[coe]) {
+                        badges.push({ color: coeColors[coe], title: `CoE: ${coe}` });
+                        overlayFields.push({ label: 'CoE', value: coe, color: coeColors[coe] });
+                    }
+                }
+            }
+
+            // Regions Overlay
+            if (newOverlays.includes('regions')) {
+                const regions = node.data.teamType?.regions || [];
+                const regionColors = {
+                    'US': '#3b82f6',     // Blue
+                    'Global': '#10b981', // Green
+                    'EMEA': '#f97316',   // Orange
+                    'APAC': '#ef4444'    // Red
+                };
+
+                // For badges, we show all dots
+                regions.forEach(region => {
+                    if (regionColors[region]) {
+                        badges.push({ color: regionColors[region], title: `Region: ${region}` });
+                    }
+                });
+
+                // For text, we show a comma-separated list
+                if (regions.length > 0) {
+                    overlayFields.push({
+                        label: 'Regions',
+                        value: regions.join(', '),
+                        color: '#6b7280' // Gray for text label since it can be multiple colors
+                    });
                 }
             }
 
             return {
                 ...node,
-                data: { ...node.data, badges, overlay }
+                data: { ...node.data, badges, overlayFields }
             };
         });
 
@@ -60,7 +99,7 @@ const MainLayout = ({ children }) => {
         <div className="flex flex-col h-screen w-screen overflow-hidden bg-gray-50">
             {/* Top Toolbar */}
             <TopToolbar
-                activeOverlay={activeOverlay}
+                activeOverlay={activeOverlays}
                 onToggleOverlay={handleOverlayChange}
                 showRightPanel={showRightPanel}
                 onToggleRightPanel={() => setShowRightPanel(!showRightPanel)}

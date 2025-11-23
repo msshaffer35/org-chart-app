@@ -133,8 +133,26 @@ const OrgNode = ({ id, data, selected }) => {
                     </div>
                 </div>
 
+                {/* Overlay Text Fields */}
+                {data.overlayFields && data.overlayFields.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                        {data.overlayFields.map((field, idx) => (
+                            <div key={idx} className="flex items-start text-xs">
+                                <span className="font-semibold text-gray-500 mr-1">{field.label}:</span>
+                                <span
+                                    className="font-medium truncate"
+                                    style={{ color: field.color }}
+                                    title={field.value}
+                                >
+                                    {field.value}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Department / Meta */}
-                <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
+                <div className="pt-3 border-t border-gray-100 flex justify-between items-center mt-2">
                     {visibleFields.department ? (
                         <div className="flex items-center text-xs text-gray-500">
                             <Building className="w-3 h-3 mr-1" />
@@ -147,9 +165,19 @@ const OrgNode = ({ id, data, selected }) => {
                     {/* Overlay Badges */}
                     {data.badges && (
                         <div className="flex space-x-1">
-                            {data.badges.map((badge, idx) => (
-                                <span key={idx} className="w-2 h-2 rounded-full" style={{ backgroundColor: badge }} />
-                            ))}
+                            {data.badges.map((badge, idx) => {
+                                // Handle both old string format and new object format
+                                const color = typeof badge === 'string' ? badge : badge.color;
+                                const title = typeof badge === 'string' ? '' : badge.title;
+                                return (
+                                    <span
+                                        key={idx}
+                                        className="w-2 h-2 rounded-full cursor-help"
+                                        style={{ backgroundColor: color }}
+                                        title={title}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
                 </div>
