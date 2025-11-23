@@ -126,6 +126,36 @@ const RightPanel = () => {
                                     </div>
                                 </div>
 
+                                {/* Employee Details */}
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Employee Details</h3>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Employee Type</label>
+                                        <select
+                                            value={selectedNode.data.employeeType || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { employeeType: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                        >
+                                            <option value="">Select Type...</option>
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contractor">Contractor</option>
+                                            <option value="Vendor">Vendor</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Comments / Notes</label>
+                                        <textarea
+                                            value={selectedNode.data.comments || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { comments: e.target.value })}
+                                            placeholder="Add notes here..."
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[80px]"
+                                        />
+                                    </div>
+                                </div>
+
                                 {/* Team Types */}
                                 <div className="space-y-4 pt-4 border-t border-gray-200">
                                     <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Team Types</h3>

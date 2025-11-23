@@ -104,6 +104,22 @@ const MainLayout = ({ children }) => {
                 }
             }
 
+            // Employee Type Overlay
+            if (newOverlays.includes('employeeType')) {
+                const type = node.data.employeeType;
+                if (type) {
+                    const typeColors = {
+                        'Full-time': '#3b82f6',   // Blue
+                        'Part-time': '#eab308',   // Yellow
+                        'Contractor': '#f97316',  // Orange
+                        'Vendor': '#a855f7'       // Purple
+                    };
+                    if (typeColors[type]) {
+                        overlayFields.push({ label: 'Type', value: type, color: typeColors[type] });
+                    }
+                }
+            }
+
             return {
                 ...node,
                 data: { ...node.data, overlayFields }
