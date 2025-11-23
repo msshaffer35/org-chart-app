@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil, Search, Filter, ArrowUpDown } from 'lucide-react';
 
 const ProjectList = () => {
     const navigate = useNavigate();
@@ -9,6 +9,11 @@ const ProjectList = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
+
+    // Search & Filter State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDept, setSelectedDept] = useState('All');
+    const [sortBy, setSortBy] = useState('dateCollected-desc'); // dateCollected-desc, dateCollected-asc, account-asc, lastModified-desc
 
     // Form State
     const [formData, setFormData] = useState({
@@ -20,6 +25,35 @@ const ProjectList = () => {
     useEffect(() => {
         loadProjects();
     }, [loadProjects]);
+
+    // Derived Data
+    const departments = useMemo(() => {
+        const depts = new Set(projectList.map(p => p.department).filter(Boolean));
+        return ['All', ...Array.from(depts).sort()];
+    }, [projectList]);
+
+    const filteredProjects = useMemo(() => {
+        return projectList
+            .filter(project => {
+                const matchesSearch = (project.account || '').toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesDept = selectedDept === 'All' || project.department === selectedDept;
+                return matchesSearch && matchesDept;
+            })
+            .sort((a, b) => {
+                switch (sortBy) {
+                    case 'dateCollected-desc':
+                        return new Date(b.dateCollected || 0) - new Date(a.dateCollected || 0);
+                    case 'dateCollected-asc':
+                        return new Date(a.dateCollected || 0) - new Date(b.dateCollected || 0);
+                    case 'account-asc':
+                        return (a.account || '').localeCompare(b.account || '');
+                    case 'lastModified-desc':
+                        return new Date(b.lastModified || 0) - new Date(a.lastModified || 0);
+                    default:
+                        return 0;
+                }
+            });
+    }, [projectList, searchQuery, selectedDept, sortBy]);
 
     const openCreateModal = () => {
         setEditingProject(null);
@@ -80,37 +114,84 @@ const ProjectList = () => {
     return (
         <div className="min-h-screen bg-slate-50 p-8">
             <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900">My Projects</h1>
                         <p className="text-slate-500 mt-2">Manage your organization charts</p>
                     </div>
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
                     >
                         <Plus size={20} />
                         New Project
                     </button>
                 </div>
 
-                {projectList.length === 0 ? (
+                {/* Search & Filter Bar */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search projects..."
+                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex gap-4 w-full md:w-auto">
+                        <div className="relative flex-1 md:w-48">
+                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <select
+                                className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedDept}
+                                onChange={(e) => setSelectedDept(e.target.value)}
+                            >
+                                {departments.map(dept => (
+                                    <option key={dept} value={dept}>{dept === 'All' ? 'All Departments' : dept}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="relative flex-1 md:w-56">
+                            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <select
+                                className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                            >
+                                <option value="dateCollected-desc">Date Collected (Newest)</option>
+                                <option value="dateCollected-asc">Date Collected (Oldest)</option>
+                                <option value="account-asc">Account Name (A-Z)</option>
+                                <option value="lastModified-desc">Last Modified</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {filteredProjects.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
                         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <FolderOpen className="text-slate-400" size={32} />
+                            <Search className="text-slate-400" size={32} />
                         </div>
-                        <h3 className="text-lg font-medium text-slate-900">No projects yet</h3>
-                        <p className="text-slate-500 mt-2 mb-6">Create your first organization chart to get started</p>
-                        <button
-                            onClick={openCreateModal}
-                            className="text-blue-600 font-medium hover:text-blue-700"
-                        >
-                            Create a project
-                        </button>
+                        <h3 className="text-lg font-medium text-slate-900">No projects found</h3>
+                        <p className="text-slate-500 mt-2 mb-6">
+                            {projectList.length === 0
+                                ? "Create your first organization chart to get started"
+                                : "Try adjusting your search or filters"}
+                        </p>
+                        {projectList.length === 0 && (
+                            <button
+                                onClick={openCreateModal}
+                                className="text-blue-600 font-medium hover:text-blue-700"
+                            >
+                                Create a project
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {projectList.map((project) => (
+                        {filteredProjects.map((project) => (
                             <div
                                 key={project.id}
                                 onClick={() => navigate(`/editor/${project.id}`)}
