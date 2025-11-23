@@ -63,10 +63,46 @@ export const exportToPptx = async (nodes, edges, settings) => {
         const toInchY = (y) => ((y - minY) * scale + offsetY) * PX_TO_INCH;
         const toInchDim = (v) => (v * scale) * PX_TO_INCH;
 
-        // Font scaling: 14px (web) -> 14pt (pptx) is too big if chart is scaled down.
-        // We need to scale the font size by the chart scale factor.
-        // Also, px to pt conversion is roughly 0.75 (96px = 1in, 72pt = 1in).
+        // Helper to scale font size
         const scaleFontSize = (px) => Math.max(4, px * 0.75 * scale); // Min 4pt
+
+        // Helper to estimate text height with word wrapping
+        const estimateTextHeight = (text, fontSizePt, widthInch) => {
+            if (!text) return 0;
+            const widthPt = widthInch * 72;
+            // Avg char width approx 0.6 of font size for Arial (safer estimate)
+            const charWidthPt = fontSizePt * 0.6;
+
+            const words = text.toString().split(/\s+/);
+            let currentLineLen = 0;
+            let numLines = 1;
+
+            words.forEach((word) => {
+                const wordLen = word.length * charWidthPt;
+
+                if (currentLineLen === 0) {
+                    // First word on the line
+                    currentLineLen = wordLen;
+                } else {
+                    // Check if word fits
+                    // Add approx space width (charWidthPt)
+                    if (currentLineLen + charWidthPt + wordLen <= widthPt) {
+                        currentLineLen += charWidthPt + wordLen;
+                    } else {
+                        // Wrap to new line
+                        numLines++;
+                        currentLineLen = wordLen;
+                    }
+                }
+            });
+
+            // Line height approx 1.25 * fontSize
+            const lineHeightInch = (fontSizePt * 1.25) / 72;
+            return numLines * lineHeightInch;
+        };
+
+        // Store calculated layouts for edges
+        const nodeLayouts = new Map();
 
         // 3. Draw Nodes
         nodes.forEach(node => {
@@ -75,11 +111,78 @@ export const exportToPptx = async (nodes, edges, settings) => {
 
             if (node.type === 'org' || !node.type) {
                 const w = toInchDim(256);
-                // Height might need to grow if many fields, but for now fixed or calculated?
-                // Let's use the node height from ReactFlow if available, else default.
-                // But ReactFlow height might not include overlays if they expand.
-                // Let's stick to a base height but maybe allow overflow or just draw.
-                const h = toInchDim(node.height || 200);
+                // Start with base height, but allow expansion
+                let h = toInchDim(node.height || 200);
+
+                const imgSize = toInchDim(48);
+                const textStartX = x + toInchDim(16);
+                let textOffsetX = 0;
+                const contentStartY = y + toInchDim(20);
+
+                if (node.data.image || !node.data.image) { // Always reserve space for avatar/placeholder
+                    textOffsetX = imgSize + toInchDim(12);
+                }
+
+                const textWidth = w - toInchDim(32) - textOffsetX;
+
+                // --- Dynamic Layout Calculation ---
+                let currentY = contentStartY;
+                const layoutItems = []; // Store items to draw later
+
+                // Name
+                const nameSize = scaleFontSize(14);
+                const nameHeight = estimateTextHeight(node.data.label || 'Name', nameSize, textWidth);
+                layoutItems.push({ type: 'text', text: node.data.label || 'Name', x: textStartX + textOffsetX, y: currentY, w: textWidth, h: nameHeight, fontSize: nameSize, bold: true, color: '1F2937' });
+                currentY += nameHeight + toInchDim(4);
+
+                // Role
+                const roleSize = scaleFontSize(12);
+                const roleHeight = estimateTextHeight(node.data.role || 'Role', roleSize, textWidth);
+                layoutItems.push({ type: 'text', text: node.data.role || 'Role', x: textStartX + textOffsetX, y: currentY, w: textWidth, h: roleHeight, fontSize: roleSize, color: '6B7280' });
+                currentY += roleHeight + toInchDim(4);
+
+                // Overlay Fields
+                if (node.data.overlayFields && node.data.overlayFields.length > 0) {
+                    currentY += toInchDim(4);
+                    const fieldSize = scaleFontSize(10);
+                    node.data.overlayFields.forEach(field => {
+                        const text = `${field.label}: ${field.value}`;
+                        const fieldH = estimateTextHeight(text, fieldSize, textWidth);
+
+                        layoutItems.push({
+                            type: 'field',
+                            label: field.label,
+                            value: field.value,
+                            color: field.color,
+                            x: textStartX + textOffsetX,
+                            y: currentY,
+                            w: textWidth,
+                            h: fieldH,
+                            fontSize: fieldSize
+                        });
+                        currentY += fieldH + toInchDim(2);
+                    });
+                }
+
+                // Department (at bottom or pushed down)
+                const deptSize = scaleFontSize(10);
+                const deptHeight = estimateTextHeight(node.data.department, deptSize, w - toInchDim(32));
+                currentY += toInchDim(10); // Padding before dept
+
+                // Check if we need to expand the node
+                const contentBottom = currentY + deptHeight + toInchDim(10);
+                if (contentBottom > y + h) {
+                    h = contentBottom - y;
+                }
+
+                // Department Y position (align bottom of expanded node)
+                const deptY = y + h - deptHeight - toInchDim(10);
+                layoutItems.push({ type: 'text', text: node.data.department, x: x + toInchDim(16), y: deptY, w: w - toInchDim(32), h: deptHeight, fontSize: deptSize, color: '9CA3AF' });
+
+                // Store layout for edges
+                nodeLayouts.set(node.id, { x, y, w, h });
+
+                // --- Draw Node ---
 
                 // Background Card
                 slide.addShape(pres.ShapeType.rect, {
@@ -104,11 +207,6 @@ export const exportToPptx = async (nodes, edges, settings) => {
                 });
 
                 // Avatar / Icon
-                const imgSize = toInchDim(48);
-                const textStartX = x + toInchDim(16);
-                let textOffsetX = 0;
-                const contentStartY = y + toInchDim(20);
-
                 if (node.data.image) {
                     slide.addImage({
                         path: node.data.image,
@@ -118,9 +216,7 @@ export const exportToPptx = async (nodes, edges, settings) => {
                         h: imgSize,
                         rounding: true
                     });
-                    textOffsetX = imgSize + toInchDim(12);
                 } else {
-                    // Placeholder Circle
                     slide.addShape(pres.ShapeType.ellipse, {
                         x: textStartX,
                         y: contentStartY,
@@ -129,89 +225,34 @@ export const exportToPptx = async (nodes, edges, settings) => {
                         fill: { color: 'F3F4F6' }, // gray-100
                         line: { color: 'E5E7EB', width: 1 * scale }
                     });
-                    textOffsetX = imgSize + toInchDim(12);
                 }
 
-                // Text Positioning
-                let currentY = contentStartY;
-                const textWidth = w - toInchDim(32) - textOffsetX;
-                const textX = textStartX + textOffsetX;
-
-                // Name
-                const nameSize = scaleFontSize(14);
-                slide.addText(node.data.label || 'Name', {
-                    x: textX,
-                    y: currentY,
-                    w: textWidth,
-                    h: nameSize * 1.5 * PX_TO_INCH * 2, // Approx height
-                    fontFace: 'Arial',
-                    fontSize: nameSize,
-                    bold: true,
-                    color: '1F2937',
-                    align: 'left',
-                    valign: 'top'
-                });
-                currentY += toInchDim(20); // Spacing
-
-                // Role
-                const roleSize = scaleFontSize(12);
-                slide.addText(node.data.role || 'Role', {
-                    x: textX,
-                    y: currentY,
-                    w: textWidth,
-                    h: roleSize * 1.5 * PX_TO_INCH * 2,
-                    fontFace: 'Arial',
-                    fontSize: roleSize,
-                    color: '6B7280',
-                    align: 'left',
-                    valign: 'top'
-                });
-                currentY += toInchDim(18);
-
-                // Overlay Fields (CoE, Regions, etc.)
-                if (node.data.overlayFields && node.data.overlayFields.length > 0) {
-                    currentY += toInchDim(4); // small gap
-                    const fieldLabelSize = scaleFontSize(10);
-                    const fieldValueSize = scaleFontSize(10);
-
-                    node.data.overlayFields.forEach(field => {
-                        slide.addText([
-                            { text: field.label + ": ", options: { bold: true, color: '6B7280' } },
-                            { text: field.value, options: { bold: false, color: field.color || '1F2937' } }
-                        ], {
-                            x: textX,
-                            y: currentY,
-                            w: textWidth,
-                            h: fieldValueSize * 1.5 * PX_TO_INCH * 2,
-                            fontFace: 'Arial',
-                            fontSize: fieldValueSize,
-                            align: 'left',
-                            valign: 'top'
+                // Draw Text Items
+                layoutItems.forEach(item => {
+                    if (item.type === 'text') {
+                        slide.addText(item.text, {
+                            x: item.x, y: item.y, w: item.w, h: item.h,
+                            fontFace: 'Arial', fontSize: item.fontSize, bold: item.bold, color: item.color,
+                            align: 'left', valign: 'top'
                         });
-                        currentY += toInchDim(14);
-                    });
-                }
-
-                // Department (at bottom)
-                if (node.data.department) {
-                    const deptSize = scaleFontSize(10);
-                    slide.addText(node.data.department, {
-                        x: x + toInchDim(16),
-                        y: y + h - toInchDim(24),
-                        w: w - toInchDim(32),
-                        h: deptSize * 1.5 * PX_TO_INCH * 2,
-                        fontFace: 'Arial',
-                        fontSize: deptSize,
-                        color: '9CA3AF',
-                        align: 'left',
-                        valign: 'bottom'
-                    });
-                }
+                    } else if (item.type === 'field') {
+                        slide.addText([
+                            { text: item.label + ": ", options: { bold: true, color: '6B7280' } },
+                            { text: item.value, options: { bold: false, color: item.color || '1F2937' } }
+                        ], {
+                            x: item.x, y: item.y, w: item.w, h: item.h,
+                            fontFace: 'Arial', fontSize: item.fontSize,
+                            align: 'left', valign: 'top'
+                        });
+                    }
+                });
             }
             else if (node.type === 'text') {
                 const w = toInchDim(node.width || 150);
                 const h = toInchDim(node.height || 50);
                 const fontSize = scaleFontSize(parseInt(node.data.fontSize) || 14);
+
+                nodeLayouts.set(node.id, { x, y, w, h });
 
                 slide.addText(node.data.label || 'Text', {
                     x: x, y: y, w: w, h: h,
@@ -234,10 +275,15 @@ export const exportToPptx = async (nodes, edges, settings) => {
 
             if (!sourceNode || !targetNode) return;
 
-            const sX = toInchX(sourceNode.position.x + (sourceNode.width || 256) / 2);
-            const sY = toInchY(sourceNode.position.y + (sourceNode.height || 160)); // Use fixed height for connection point to be safe? Or node.height?
-            const tX = toInchX(targetNode.position.x + (targetNode.width || 256) / 2);
-            const tY = toInchY(targetNode.position.y);
+            const sLayout = nodeLayouts.get(sourceNode.id);
+            const tLayout = nodeLayouts.get(targetNode.id);
+
+            if (!sLayout || !tLayout) return;
+
+            const sX = sLayout.x + sLayout.w / 2;
+            const sY = sLayout.y + sLayout.h; // Bottom of source
+            const tX = tLayout.x + tLayout.w / 2;
+            const tY = tLayout.y; // Top of target
 
             const isDotted = edge.style?.strokeDasharray;
             const lineColor = '9CA3AF';
