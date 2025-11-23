@@ -43,6 +43,13 @@ const TextNode = ({ id, data, selected }) => {
         e.target.style.height = e.target.scrollHeight + 'px';
     };
 
+    const textStyle = {
+        fontSize: data.fontSize || '14px',
+        fontWeight: data.isBold ? 'bold' : 'normal',
+        fontStyle: data.isItalic ? 'italic' : 'normal',
+        color: data.textColor || '#1f2937',
+    };
+
     return (
         <div
             className={`
@@ -59,12 +66,18 @@ const TextNode = ({ id, data, selected }) => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    className="w-full h-full bg-white border border-blue-400 rounded p-1 text-gray-800 resize-none outline-none overflow-hidden"
-                    style={{ minHeight: '40px' }}
+                    className="w-full h-full bg-white border border-blue-400 rounded p-1 resize-none outline-none overflow-hidden"
+                    style={{
+                        minHeight: '40px',
+                        ...textStyle
+                    }}
                 />
             ) : (
-                <div className="w-full h-full whitespace-pre-wrap text-gray-800 p-1">
-                    {data.label || <span className="text-gray-400 italic">Double click to edit</span>}
+                <div
+                    className="w-full h-full whitespace-pre-wrap p-1"
+                    style={textStyle}
+                >
+                    {data.label || <span className="text-gray-400 italic" style={{ fontSize: '14px', fontWeight: 'normal', fontStyle: 'italic' }}>Double click to edit</span>}
                 </div>
             )}
 

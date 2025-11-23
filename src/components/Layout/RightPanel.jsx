@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Sliders } from 'lucide-react';
+import { Settings, Sliders, Bold, Italic, Type, Palette } from 'lucide-react';
 import useStore from '../../store/useStore';
 
 const RightPanel = () => {
@@ -19,71 +19,144 @@ const RightPanel = () => {
                     <div className="p-4 border-b border-gray-200 bg-gray-50">
                         <h2 className="font-semibold text-gray-700 flex items-center gap-2">
                             <Settings size={18} />
-                            Node Properties
+                            {selectedNode.type === 'text' ? 'Text Properties' : 'Node Properties'}
                         </h2>
                     </div>
 
                     <div className="p-4 space-y-6">
-                        {/* Basic Info */}
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
-                                <input
-                                    type="text"
-                                    value={selectedNode.data.label}
-                                    onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Role</label>
-                                <input
-                                    type="text"
-                                    value={selectedNode.data.role}
-                                    onChange={(e) => updateNodeData(selectedNode.id, { role: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Department</label>
-                                <input
-                                    type="text"
-                                    value={selectedNode.data.department}
-                                    onChange={(e) => updateNodeData(selectedNode.id, { department: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Styling */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-2">Header Color</label>
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-gray-500'].map(color => (
-                                    <button
-                                        key={color}
-                                        onClick={() => updateNodeData(selectedNode.id, { color })}
-                                        className={`w-8 h-8 rounded-full ${color} ${selectedNode.data.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                        {selectedNode.type === 'text' ? (
+                            /* Text Node Specific Properties */
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Text Content</label>
+                                    <textarea
+                                        value={selectedNode.data.label}
+                                        onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
+                                        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]"
                                     />
-                                ))}
-                            </div>
+                                </div>
 
-                            <label className="block text-xs font-medium text-gray-500 mb-2">Incoming Connection Style</label>
-                            <div className="flex bg-gray-100 p-1 rounded-md">
-                                <button
-                                    onClick={() => updateParentEdgeStyle(selectedNode.id, 'solid')}
-                                    className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all bg-white shadow text-gray-800 hover:bg-gray-50"
-                                >
-                                    Solid
-                                </button>
-                                <button
-                                    onClick={() => updateParentEdgeStyle(selectedNode.id, 'dotted')}
-                                    className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all text-gray-500 hover:text-gray-700 hover:bg-white/50"
-                                >
-                                    Dotted
-                                </button>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-2">Typography</label>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex-1">
+                                            <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                                                <div className="px-2 text-gray-400">
+                                                    <Type size={14} />
+                                                </div>
+                                                <select
+                                                    value={selectedNode.data.fontSize || '14px'}
+                                                    onChange={(e) => updateNodeData(selectedNode.id, { fontSize: e.target.value })}
+                                                    className="w-full p-1.5 text-sm bg-transparent outline-none border-l border-gray-200"
+                                                >
+                                                    <option value="12px">Small (12px)</option>
+                                                    <option value="14px">Normal (14px)</option>
+                                                    <option value="16px">Medium (16px)</option>
+                                                    <option value="20px">Large (20px)</option>
+                                                    <option value="24px">Extra Large (24px)</option>
+                                                    <option value="32px">Huge (32px)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => updateNodeData(selectedNode.id, { isBold: !selectedNode.data.isBold })}
+                                            className={`p-2 rounded border ${selectedNode.data.isBold ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                            title="Bold"
+                                        >
+                                            <Bold size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => updateNodeData(selectedNode.id, { isItalic: !selectedNode.data.isItalic })}
+                                            className={`p-2 rounded border ${selectedNode.data.isItalic ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                            title="Italic"
+                                        >
+                                            <Italic size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-2">Text Color</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['#1f2937', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'].map(color => (
+                                            <button
+                                                key={color}
+                                                onClick={() => updateNodeData(selectedNode.id, { textColor: color })}
+                                                className={`w-6 h-6 rounded-full border border-gray-200 ${selectedNode.data.textColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                                                style={{ backgroundColor: color }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            /* Standard Node Properties */
+                            <>
+                                {/* Basic Info */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                                        <input
+                                            type="text"
+                                            value={selectedNode.data.label}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Role</label>
+                                        <input
+                                            type="text"
+                                            value={selectedNode.data.role}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { role: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Department</label>
+                                        <input
+                                            type="text"
+                                            value={selectedNode.data.department}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { department: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Styling */}
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-2">Header Color</label>
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-gray-500'].map(color => (
+                                            <button
+                                                key={color}
+                                                onClick={() => updateNodeData(selectedNode.id, { color })}
+                                                className={`w-8 h-8 rounded-full ${color} ${selectedNode.data.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <label className="block text-xs font-medium text-gray-500 mb-2">Incoming Connection Style</label>
+                                    <div className="flex bg-gray-100 p-1 rounded-md">
+                                        <button
+                                            onClick={() => updateParentEdgeStyle(selectedNode.id, 'solid')}
+                                            className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all bg-white shadow text-gray-800 hover:bg-gray-50"
+                                        >
+                                            Solid
+                                        </button>
+                                        <button
+                                            onClick={() => updateParentEdgeStyle(selectedNode.id, 'dotted')}
+                                            className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                                        >
+                                            Dotted
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             ) : (
