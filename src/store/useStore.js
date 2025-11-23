@@ -17,10 +17,12 @@ const debounce = (func, wait) => {
 };
 
 const debouncedSave = debounce((state) => {
-    storageService.saveChart({
-        nodes: state.nodes,
-        edges: state.edges
-    });
+    if (state.currentProjectId) {
+        storageService.saveProject(state.currentProjectId, {
+            nodes: state.nodes,
+            edges: state.edges
+        });
+    }
 }, 1000);
 
 const useStore = create((set, get) => ({
@@ -28,6 +30,11 @@ const useStore = create((set, get) => ({
     edges: [],
     isLoading: false,
     error: null,
+
+    // Project Management State
+    currentProjectId: null,
+    currentProject: null, // { id, account, department, dateCollected, ... }
+    projectList: [],
 
     settings: {
         spacing: 100,
@@ -200,6 +207,8 @@ const useStore = create((set, get) => ({
         setTimeout(() => {
             get().layoutNodes('TB');
         }, 10);
+
+        debouncedSave(get());
     },
 
     reparentNode: (childId, newParentId) => {
@@ -265,13 +274,57 @@ const useStore = create((set, get) => ({
         debouncedSave(get());
     },
 
-    // Persistence Actions
-    loadChart: async () => {
-        set({ isLoading: true, error: null });
+    // --- Project Actions ---
+
+    loadProjects: () => {
+        const projects = storageService.getProjects();
+        set({ projectList: projects });
+    },
+
+    createProject: async (metadata) => {
         try {
-            const data = await storageService.loadChart();
+            const id = await storageService.createProject(metadata);
+            get().loadProjects();
+            return id;
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
+    updateProject: async (id, metadata) => {
+        try {
+            await storageService.updateProjectMetadata(id, metadata);
+            get().loadProjects();
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
+    deleteProject: async (id) => {
+        try {
+            await storageService.deleteProject(id);
+            get().loadProjects();
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
+    loadChart: async (projectId) => {
+        if (!projectId) return;
+
+        set({ isLoading: true, error: null, currentProjectId: projectId });
+
+        // Load metadata
+        const metadata = storageService.getProjectMetadata(projectId);
+        set({ currentProject: metadata });
+
+        try {
+            const data = await storageService.loadProject(projectId);
             if (data) {
                 set({ nodes: data.nodes || [], edges: data.edges || [] });
+            } else {
+                // New project or empty
+                set({ nodes: [], edges: [] });
             }
         } catch (err) {
             set({ error: 'Failed to load chart' });
@@ -281,7 +334,7 @@ const useStore = create((set, get) => ({
     },
 
     resetChart: async () => {
-        await storageService.clearChart();
+        // Only clear current state, don't delete persistence unless explicitly requested
         set({ nodes: [], edges: [] });
     }
 }));
