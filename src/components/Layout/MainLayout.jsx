@@ -31,17 +31,20 @@ const MainLayout = ({ children }) => {
             let badges = [];
             let overlay = null;
 
-            if (overlayType === 'skills') {
-                // Mock logic: Randomly assign skill gaps
-                if (Math.random() > 0.7) {
-                    badges = ['#ef4444']; // Red for gap
-                    overlay = 'skills';
+            if (overlayType === 'scrum') {
+                // Real logic: Assign color based on selected Scrum Team
+                const team = node.data.teamType?.scrum;
+                if (team) {
+                    const teamColors = {
+                        'Team A': '#3b82f6', // Blue
+                        'Team B': '#10b981', // Green
+                        'Team C': '#8b5cf6'  // Purple
+                    };
+                    if (teamColors[team]) {
+                        badges = [teamColors[team]];
+                        overlay = 'scrum';
+                    }
                 }
-            } else if (overlayType === 'scrum') {
-                // Mock logic: Assign random teams
-                const teams = ['#3b82f6', '#10b981', '#8b5cf6'];
-                badges = [teams[Math.floor(Math.random() * teams.length)]];
-                overlay = 'scrum';
             }
 
             return {

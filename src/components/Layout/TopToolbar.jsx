@@ -46,18 +46,7 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRi
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Overlays</span>
                     <div className="flex gap-2">
-                        <button
-                            onClick={() => onToggleOverlay('skills')}
-                            className={`
-                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2
-                                ${activeOverlay === 'skills'
-                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}
-                            `}
-                        >
-                            <Layers size={14} />
-                            Skills Gaps
-                        </button>
+
                         <button
                             onClick={() => onToggleOverlay('scrum')}
                             className={`

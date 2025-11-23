@@ -126,6 +126,74 @@ const RightPanel = () => {
                                     </div>
                                 </div>
 
+                                {/* Team Types */}
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Team Types</h3>
+
+                                    {/* Scrum Team */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Scrum Team</label>
+                                        <select
+                                            value={selectedNode.data.teamType?.scrum || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, {
+                                                teamType: { ...selectedNode.data.teamType, scrum: e.target.value }
+                                            })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                        >
+                                            <option value="">None</option>
+                                            <option value="Team A">Team A</option>
+                                            <option value="Team B">Team B</option>
+                                            <option value="Team C">Team C</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Center of Excellence */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Center of Excellence</label>
+                                        <select
+                                            value={selectedNode.data.teamType?.coe || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, {
+                                                teamType: { ...selectedNode.data.teamType, coe: e.target.value }
+                                            })}
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                        >
+                                            <option value="">None</option>
+                                            <option value="Digital">Digital</option>
+                                            <option value="AI">AI</option>
+                                            <option value="Data">Data</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Regions Supported */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-2">Regions Supported</label>
+                                        <div className="space-y-2">
+                                            {['US', 'Global', 'EMEA', 'APAC'].map(region => (
+                                                <label key={region} className="flex items-center space-x-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedNode.data.teamType?.regions?.includes(region) || false}
+                                                        onChange={(e) => {
+                                                            const currentRegions = selectedNode.data.teamType?.regions || [];
+                                                            let newRegions;
+                                                            if (e.target.checked) {
+                                                                newRegions = [...currentRegions, region];
+                                                            } else {
+                                                                newRegions = currentRegions.filter(r => r !== region);
+                                                            }
+                                                            updateNodeData(selectedNode.id, {
+                                                                teamType: { ...selectedNode.data.teamType, regions: newRegions }
+                                                            });
+                                                        }}
+                                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-sm text-gray-600">{region}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Styling */}
                                 <div>
                                     <label className="block text-xs font-medium text-gray-500 mb-2">Header Color</label>
