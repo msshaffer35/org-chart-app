@@ -11,6 +11,7 @@ A modern, interactive organization chart builder built with React, Vite, and Rea
 -   **Smart Layout**: Automatic tree layout for organizational structures.
 -   **Data Management**:
     -   **Import CSV**: Bulk import employee data.
+    -   **Export PPTX**: Export your org chart to a PowerPoint presentation.
     -   **Local Storage**: Auto-saves your work to your browser's local storage.
 -   **Customization**:
     -   **Node Properties**: Edit details and styling for each node.
@@ -36,6 +37,7 @@ A modern, interactive organization chart builder built with React, Vite, and Rea
 -   **State Management**: [Zustand](https://github.com/pmndrs/zustand)
 -   **Icons**: [Lucide React](https://lucide.dev/)
 -   **CSV Parsing**: [PapaParse](https://www.papaparse.com/)
+-   **PPTX Export**: [PptxGenJS](https://gitbrent.github.io/PptxGenJS/)
 -   **Layout Engine**: [Dagre](https://github.com/dagrejs/dagre)
 
 ## Getting Started
@@ -88,10 +90,17 @@ A modern, interactive organization chart builder built with React, Vite, and Rea
 3.  Toggle **Visible Fields** to show/hide specific information.
 4.  Add **Conditional Formatting** rules to color-code nodes automatically.
 
+### Exporting
+
+1.  Click the "Export PPTX" button in the top-right corner of the canvas.
+2.  The chart will be generated as a PowerPoint slide and downloaded automatically.
+
 ## Project Structure
 
 -   `src/components`: Reusable UI components (Canvas, Nodes, Layout).
+-   `src/features`: Feature-specific logic (Planning, Overlays).
 -   `src/pages`: Application pages (ProjectList, Editor).
+-   `src/services`: Core services (Storage, Export).
 -   `src/store`: Global state management using Zustand.
 -   `src/utils`: Helper functions (CSV parsing, layout logic).
 
