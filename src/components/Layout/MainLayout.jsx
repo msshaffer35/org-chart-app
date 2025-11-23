@@ -24,7 +24,6 @@ const MainLayout = ({ children }) => {
 
         // Apply overlay data
         const newNodes = nodes.map(node => {
-            let badges = [];
             let overlayFields = [];
 
             // Scrum Overlay
@@ -37,7 +36,6 @@ const MainLayout = ({ children }) => {
                         'Team C': '#8b5cf6'  // Purple
                     };
                     if (teamColors[team]) {
-                        badges.push({ color: teamColors[team], title: `Scrum: ${team}` });
                         overlayFields.push({ label: 'Scrum Team', value: team, color: teamColors[team] });
                     }
                 }
@@ -53,7 +51,6 @@ const MainLayout = ({ children }) => {
                         'Data': '#f59e0b'     // Amber
                     };
                     if (coeColors[coe]) {
-                        badges.push({ color: coeColors[coe], title: `CoE: ${coe}` });
                         overlayFields.push({ label: 'CoE', value: coe, color: coeColors[coe] });
                     }
                 }
@@ -62,19 +59,6 @@ const MainLayout = ({ children }) => {
             // Regions Overlay
             if (newOverlays.includes('regions')) {
                 const regions = node.data.teamType?.regions || [];
-                const regionColors = {
-                    'US': '#3b82f6',     // Blue
-                    'Global': '#10b981', // Green
-                    'EMEA': '#f97316',   // Orange
-                    'APAC': '#ef4444'    // Red
-                };
-
-                // For badges, we show all dots
-                regions.forEach(region => {
-                    if (regionColors[region]) {
-                        badges.push({ color: regionColors[region], title: `Region: ${region}` });
-                    }
-                });
 
                 // For text, we show a comma-separated list
                 if (regions.length > 0) {
@@ -88,7 +72,7 @@ const MainLayout = ({ children }) => {
 
             return {
                 ...node,
-                data: { ...node.data, badges, overlayFields }
+                data: { ...node.data, overlayFields }
             };
         });
 

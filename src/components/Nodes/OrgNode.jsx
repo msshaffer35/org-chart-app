@@ -161,25 +161,6 @@ const OrgNode = ({ id, data, selected }) => {
                     ) : (
                         <div /> /* Spacer */
                     )}
-
-                    {/* Overlay Badges */}
-                    {data.badges && (
-                        <div className="flex space-x-1">
-                            {data.badges.map((badge, idx) => {
-                                // Handle both old string format and new object format
-                                const color = typeof badge === 'string' ? badge : badge.color;
-                                const title = typeof badge === 'string' ? '' : badge.title;
-                                return (
-                                    <span
-                                        key={idx}
-                                        className="w-2 h-2 rounded-full cursor-help"
-                                        style={{ backgroundColor: color }}
-                                        title={title}
-                                    />
-                                );
-                            })}
-                        </div>
-                    )}
                 </div>
             </div>
 
