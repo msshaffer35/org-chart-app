@@ -14,6 +14,77 @@ export const storageService = {
         }
     },
 
+    refreshAllProjectMetadata: async () => {
+        try {
+            const projects = storageService.getProjects();
+            const updatedProjects = [];
+
+            for (const project of projects) {
+                try {
+                    // Load full project data
+                    const data = await storageService.loadProject(project.id);
+                    if (!data || !data.nodes) {
+                        updatedProjects.push(project);
+                        continue;
+                    }
+
+                    // Calculate metadata
+                    const metadata = {
+                        functions: new Set(),
+                        subFunctions: new Set(),
+                        employeeTypes: new Set(),
+                        regions: new Set(),
+                        scrumTeams: new Set(),
+                        coes: new Set()
+                    };
+
+                    data.nodes.forEach(node => {
+                        if (node.data) {
+                            if (node.data.employeeType) metadata.employeeTypes.add(node.data.employeeType);
+
+                            if (node.data.teamType) {
+                                if (node.data.teamType.scrum) metadata.scrumTeams.add(node.data.teamType.scrum);
+                                if (node.data.teamType.coe) metadata.coes.add(node.data.teamType.coe);
+
+                                if (Array.isArray(node.data.teamType.regions)) {
+                                    node.data.teamType.regions.forEach(r => metadata.regions.add(r));
+                                }
+                                if (Array.isArray(node.data.teamType.functions)) {
+                                    node.data.teamType.functions.forEach(f => metadata.functions.add(f));
+                                }
+                                if (Array.isArray(node.data.teamType.subFunctions)) {
+                                    node.data.teamType.subFunctions.forEach(sf => metadata.subFunctions.add(sf));
+                                }
+                            }
+                        }
+                    });
+
+                    updatedProjects.push({
+                        ...project,
+                        functions: Array.from(metadata.functions),
+                        subFunctions: Array.from(metadata.subFunctions),
+                        employeeTypes: Array.from(metadata.employeeTypes),
+                        regions: Array.from(metadata.regions),
+                        scrumTeams: Array.from(metadata.scrumTeams),
+                        coes: Array.from(metadata.coes),
+                        lastModified: Date.now() // Optional: update modified time or keep original? Let's keep original for refresh only unless we want to signal change.
+                        // Actually, let's NOT update lastModified on refresh so it doesn't mess up sorting by date.
+                    });
+
+                } catch (err) {
+                    console.error(`Failed to refresh metadata for project ${project.id}`, err);
+                    updatedProjects.push(project);
+                }
+            }
+
+            localStorage.setItem(PROJECTS_KEY, JSON.stringify(updatedProjects));
+            return updatedProjects;
+        } catch (error) {
+            console.error('Failed to refresh all project metadata:', error);
+            throw error;
+        }
+    },
+
     getProjectMetadata: (id) => {
         try {
             const projects = storageService.getProjects();
@@ -73,13 +144,13 @@ export const storageService = {
 
     // --- Chart Data Persistence ---
 
-    saveProject: (id, data) => {
+    saveProject: (id, data, metadataUpdates = {}) => {
         try {
             const serialized = JSON.stringify(data);
             localStorage.setItem(`${PROJECT_PREFIX}${id}`, serialized);
 
-            // Update last modified timestamp
-            storageService.updateProjectMetadata(id, {});
+            // Update last modified timestamp and other metadata
+            storageService.updateProjectMetadata(id, metadataUpdates);
 
             return Promise.resolve(true);
         } catch (error) {

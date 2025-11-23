@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil, Search, Filter, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil, Search, Filter, ArrowUpDown, ChevronDown, Check, RefreshCw, Users, Globe, Target, Layers } from 'lucide-react';
+import { storageService } from '../services/storageService';
 
 const ProjectList = () => {
     const navigate = useNavigate();
@@ -9,6 +10,7 @@ const ProjectList = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Search & Filter State
     const [globalSearch, setGlobalSearch] = useState('');
@@ -22,6 +24,14 @@ const ProjectList = () => {
     const [selectedDept, setSelectedDept] = useState('All');
     const [deptSearch, setDeptSearch] = useState('');
     const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+
+    // New Filters
+    const [selectedFunction, setSelectedFunction] = useState('All');
+    const [selectedSubFunction, setSelectedSubFunction] = useState('All');
+    const [selectedEmployeeType, setSelectedEmployeeType] = useState('All');
+    const [selectedRegion, setSelectedRegion] = useState('All');
+    const [selectedScrum, setSelectedScrum] = useState('All');
+    const [selectedCoe, setSelectedCoe] = useState('All');
 
     const [sortBy, setSortBy] = useState('dateCollected-desc');
 
@@ -64,6 +74,39 @@ const ProjectList = () => {
         return ['All', ...Array.from(depts).sort()];
     }, [projectList]);
 
+    // Helper to extract unique values from arrays or single values
+    const getUniqueValues = (field) => {
+        const values = new Set();
+        projectList.forEach(p => {
+            if (Array.isArray(p[field])) {
+                p[field].forEach(v => v && values.add(v));
+            } else if (p[field]) {
+                values.add(p[field]);
+            }
+        });
+        return ['All', ...Array.from(values).sort()];
+    };
+
+    const functions = useMemo(() => getUniqueValues('functions'), [projectList]);
+    const subFunctions = useMemo(() => getUniqueValues('subFunctions'), [projectList]);
+    const employeeTypes = useMemo(() => getUniqueValues('employeeTypes'), [projectList]);
+    const regions = useMemo(() => getUniqueValues('regions'), [projectList]);
+    const scrumTeams = useMemo(() => getUniqueValues('scrumTeams'), [projectList]);
+    const coes = useMemo(() => getUniqueValues('coes'), [projectList]);
+
+    const handleRefreshMetadata = async () => {
+        setIsRefreshing(true);
+        try {
+            await storageService.refreshAllProjectMetadata();
+            loadProjects();
+        } catch (error) {
+            console.error("Failed to refresh metadata", error);
+            alert("Failed to refresh metadata. Please try again.");
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     const filteredAccounts = useMemo(() => {
         return accounts.filter(acc =>
             acc.toLowerCase().includes(accountSearch.toLowerCase())
@@ -79,11 +122,26 @@ const ProjectList = () => {
     const filteredProjects = useMemo(() => {
         return projectList
             .filter(project => {
-                // Global Search (Account, Dept, Date)
+                // Global Search (Account, Dept, Date, and new tags)
                 const searchLower = globalSearch.toLowerCase();
+
+                const checkTags = (tags) => {
+                    if (!tags) return false;
+                    if (Array.isArray(tags)) {
+                        return tags.some(t => t.toLowerCase().includes(searchLower));
+                    }
+                    return tags.toLowerCase().includes(searchLower);
+                };
+
                 const matchesGlobal =
                     (project.account || '').toLowerCase().includes(searchLower) ||
                     (project.department || '').toLowerCase().includes(searchLower) ||
+                    checkTags(project.functions) ||
+                    checkTags(project.subFunctions) ||
+                    checkTags(project.employeeTypes) ||
+                    checkTags(project.regions) ||
+                    checkTags(project.scrumTeams) ||
+                    checkTags(project.coes) ||
                     (() => {
                         if (!project.dateCollected) return false;
                         const date = new Date(project.dateCollected);
@@ -105,7 +163,17 @@ const ProjectList = () => {
                 // Department Filter
                 const matchesDept = selectedDept === 'All' || project.department === selectedDept;
 
-                return matchesGlobal && matchesAccount && matchesDept;
+                // New Filters
+                const matchesFunction = selectedFunction === 'All' || (project.functions && project.functions.includes(selectedFunction));
+                const matchesSubFunction = selectedSubFunction === 'All' || (project.subFunctions && project.subFunctions.includes(selectedSubFunction));
+                const matchesEmployeeType = selectedEmployeeType === 'All' || (project.employeeTypes && project.employeeTypes.includes(selectedEmployeeType));
+                const matchesRegion = selectedRegion === 'All' || (project.regions && project.regions.includes(selectedRegion));
+                const matchesScrum = selectedScrum === 'All' || (project.scrumTeams && project.scrumTeams.includes(selectedScrum));
+                const matchesCoe = selectedCoe === 'All' || (project.coes && project.coes.includes(selectedCoe));
+
+                return matchesGlobal && matchesAccount && matchesDept &&
+                    matchesFunction && matchesSubFunction && matchesEmployeeType &&
+                    matchesRegion && matchesScrum && matchesCoe;
             })
             .sort((a, b) => {
                 switch (sortBy) {
@@ -121,7 +189,7 @@ const ProjectList = () => {
                         return 0;
                 }
             });
-    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy]);
+    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy, selectedFunction, selectedSubFunction, selectedEmployeeType, selectedRegion, selectedScrum, selectedCoe]);
 
     const openCreateModal = () => {
         setEditingProject(null);
@@ -187,13 +255,24 @@ const ProjectList = () => {
                         <h1 className="text-3xl font-bold text-slate-900">My Projects</h1>
                         <p className="text-slate-500 mt-2">Manage your organization charts</p>
                     </div>
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-                    >
-                        <Plus size={20} />
-                        New Project
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleRefreshMetadata}
+                            disabled={isRefreshing}
+                            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                            title="Refresh metadata for all projects"
+                        >
+                            <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh Metadata'}
+                        </button>
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
+                        >
+                            <Plus size={20} />
+                            New Project
+                        </button>
+                    </div>
                 </div>
 
                 {/* Search & Filter Bar */}
@@ -335,6 +414,81 @@ const ProjectList = () => {
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                         </div>
                     </div>
+
+                    {/* Extended Filters Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-4 border-t border-slate-100">
+                        {/* Function Filter */}
+                        <div className="relative">
+                            <select
+                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedFunction}
+                                onChange={(e) => setSelectedFunction(e.target.value)}
+                            >
+                                {functions.map(f => <option key={f} value={f}>{f === 'All' ? 'All Functions' : f}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+
+                        {/* Sub-Function Filter */}
+                        <div className="relative">
+                            <select
+                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedSubFunction}
+                                onChange={(e) => setSelectedSubFunction(e.target.value)}
+                            >
+                                {subFunctions.map(f => <option key={f} value={f}>{f === 'All' ? 'All Sub-Functions' : f}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+
+                        {/* Employee Type Filter */}
+                        <div className="relative">
+                            <select
+                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedEmployeeType}
+                                onChange={(e) => setSelectedEmployeeType(e.target.value)}
+                            >
+                                {employeeTypes.map(f => <option key={f} value={f}>{f === 'All' ? 'All Emp Types' : f}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+
+                        {/* Region Filter */}
+                        <div className="relative">
+                            <select
+                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedRegion}
+                                onChange={(e) => setSelectedRegion(e.target.value)}
+                            >
+                                {regions.map(f => <option key={f} value={f}>{f === 'All' ? 'All Regions' : f}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+
+                        {/* Scrum Filter */}
+                        <div className="relative">
+                            <select
+                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedScrum}
+                                onChange={(e) => setSelectedScrum(e.target.value)}
+                            >
+                                {scrumTeams.map(f => <option key={f} value={f}>{f === 'All' ? 'All Scrum Teams' : f}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+
+                        {/* COE Filter */}
+                        <div className="relative">
+                            <select
+                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
+                                value={selectedCoe}
+                                onChange={(e) => setSelectedCoe(e.target.value)}
+                            >
+                                {coes.map(f => <option key={f} value={f}>{f === 'All' ? 'All COEs' : f}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+                    </div>
                 </div>
 
                 {filteredProjects.length === 0 ? (
@@ -365,8 +519,17 @@ const ProjectList = () => {
                                 onClick={() => navigate(`/editor/${project.id}`)}
                                 className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
                             >
-                                <div className="h-24 bg-slate-100 flex items-center justify-center border-b border-slate-100 group-hover:bg-slate-50 transition-colors">
+                                <div className="h-24 bg-slate-100 flex items-center justify-center border-b border-slate-100 group-hover:bg-slate-50 transition-colors relative">
                                     <Building2 className="text-slate-300 group-hover:text-blue-400 transition-colors" size={40} />
+                                    {/* Tag Badges Overlay */}
+                                    <div className="absolute bottom-2 right-2 flex gap-1">
+                                        {project.coes && project.coes.length > 0 && (
+                                            <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded-full" title={`COE: ${project.coes.join(', ')}`}>COE</span>
+                                        )}
+                                        {project.scrumTeams && project.scrumTeams.length > 0 && (
+                                            <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-medium rounded-full" title={`Scrum: ${project.scrumTeams.join(', ')}`}>Scrum</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
@@ -374,10 +537,24 @@ const ProjectList = () => {
                                             <h3 className="font-semibold text-slate-900 truncate pr-2" title={project.account}>
                                                 {project.account || 'Untitled Account'}
                                             </h3>
-                                            <p className="text-sm text-slate-500 flex items-center gap-1">
+                                            <p className="text-sm text-slate-500 flex items-center gap-1 mb-1">
                                                 <Briefcase size={12} />
                                                 {project.department || 'No Department'}
                                             </p>
+
+                                            {/* Tags Summary */}
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {project.functions && project.functions.slice(0, 2).map(f => (
+                                                    <span key={f} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded border border-slate-200">{f}</span>
+                                                ))}
+                                                {project.functions && project.functions.length > 2 && (
+                                                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded border border-slate-200">+{project.functions.length - 2}</span>
+                                                )}
+
+                                                {project.employeeTypes && project.employeeTypes.slice(0, 2).map(et => (
+                                                    <span key={et} className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded border border-blue-100">{et}</span>
+                                                ))}
+                                            </div>
                                         </div>
                                         <div className="flex gap-1">
                                             <button
