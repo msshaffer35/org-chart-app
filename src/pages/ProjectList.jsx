@@ -84,7 +84,20 @@ const ProjectList = () => {
                 const matchesGlobal =
                     (project.account || '').toLowerCase().includes(searchLower) ||
                     (project.department || '').toLowerCase().includes(searchLower) ||
-                    (project.dateCollected || '').includes(searchLower);
+                    (() => {
+                        if (!project.dateCollected) return false;
+                        const date = new Date(project.dateCollected);
+                        // Check against multiple formats
+                        const fullDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toLowerCase(); // "january 22, 2024"
+                        const shortDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).toLowerCase(); // "jan 22, 2024"
+                        const numericDate = date.toLocaleDateString('en-US').toLowerCase(); // "1/22/2024"
+                        const isoDate = project.dateCollected.toLowerCase(); // "2024-01-22"
+
+                        return fullDate.includes(searchLower) ||
+                            shortDate.includes(searchLower) ||
+                            numericDate.includes(searchLower) ||
+                            isoDate.includes(searchLower);
+                    })();
 
                 // Account Filter
                 const matchesAccount = selectedAccount === 'All' || project.account === selectedAccount;
