@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil, Search, Filter, ArrowUpDown, ChevronDown, Check, RefreshCw, Users, Globe, Target, Layers } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import MultiSelectCombobox from '../components/MultiSelectCombobox';
 
 const ProjectList = () => {
     const navigate = useNavigate();
@@ -25,13 +26,13 @@ const ProjectList = () => {
     const [deptSearch, setDeptSearch] = useState('');
     const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
 
-    // New Filters
-    const [selectedFunction, setSelectedFunction] = useState('All');
-    const [selectedSubFunction, setSelectedSubFunction] = useState('All');
-    const [selectedEmployeeType, setSelectedEmployeeType] = useState('All');
-    const [selectedRegion, setSelectedRegion] = useState('All');
-    const [selectedScrum, setSelectedScrum] = useState('All');
-    const [selectedCoe, setSelectedCoe] = useState('All');
+    // New Filters (Multi-Select Arrays)
+    const [selectedFunctions, setSelectedFunctions] = useState([]);
+    const [selectedSubFunctions, setSelectedSubFunctions] = useState([]);
+    const [selectedEmployeeTypes, setSelectedEmployeeTypes] = useState([]);
+    const [selectedRegions, setSelectedRegions] = useState([]);
+    const [selectedScrumTeams, setSelectedScrumTeams] = useState([]);
+    const [selectedCoes, setSelectedCoes] = useState([]);
 
     const [sortBy, setSortBy] = useState('dateCollected-desc');
 
@@ -84,7 +85,7 @@ const ProjectList = () => {
                 values.add(p[field]);
             }
         });
-        return ['All', ...Array.from(values).sort()];
+        return Array.from(values).sort();
     };
 
     const functions = useMemo(() => getUniqueValues('functions'), [projectList]);
@@ -163,13 +164,25 @@ const ProjectList = () => {
                 // Department Filter
                 const matchesDept = selectedDept === 'All' || project.department === selectedDept;
 
-                // New Filters
-                const matchesFunction = selectedFunction === 'All' || (project.functions && project.functions.includes(selectedFunction));
-                const matchesSubFunction = selectedSubFunction === 'All' || (project.subFunctions && project.subFunctions.includes(selectedSubFunction));
-                const matchesEmployeeType = selectedEmployeeType === 'All' || (project.employeeTypes && project.employeeTypes.includes(selectedEmployeeType));
-                const matchesRegion = selectedRegion === 'All' || (project.regions && project.regions.includes(selectedRegion));
-                const matchesScrum = selectedScrum === 'All' || (project.scrumTeams && project.scrumTeams.includes(selectedScrum));
-                const matchesCoe = selectedCoe === 'All' || (project.coes && project.coes.includes(selectedCoe));
+                // New Filters (Multi-Select Logic: Match ANY)
+                const checkMultiSelect = (projectTags, selectedTags) => {
+                    if (selectedTags.length === 0) return true; // No filter selected = match all
+                    if (!projectTags) return false; // Filter selected but project has no tags = no match
+
+                    // If projectTags is array, check intersection
+                    if (Array.isArray(projectTags)) {
+                        return projectTags.some(tag => selectedTags.includes(tag));
+                    }
+                    // If projectTags is single value, check inclusion
+                    return selectedTags.includes(projectTags);
+                };
+
+                const matchesFunction = checkMultiSelect(project.functions, selectedFunctions);
+                const matchesSubFunction = checkMultiSelect(project.subFunctions, selectedSubFunctions);
+                const matchesEmployeeType = checkMultiSelect(project.employeeTypes, selectedEmployeeTypes);
+                const matchesRegion = checkMultiSelect(project.regions, selectedRegions);
+                const matchesScrum = checkMultiSelect(project.scrumTeams, selectedScrumTeams);
+                const matchesCoe = checkMultiSelect(project.coes, selectedCoes);
 
                 return matchesGlobal && matchesAccount && matchesDept &&
                     matchesFunction && matchesSubFunction && matchesEmployeeType &&
@@ -189,7 +202,7 @@ const ProjectList = () => {
                         return 0;
                 }
             });
-    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy, selectedFunction, selectedSubFunction, selectedEmployeeType, selectedRegion, selectedScrum, selectedCoe]);
+    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy, selectedFunctions, selectedSubFunctions, selectedEmployeeTypes, selectedRegions, selectedScrumTeams, selectedCoes]);
 
     const openCreateModal = () => {
         setEditingProject(null);
@@ -417,77 +430,48 @@ const ProjectList = () => {
 
                     {/* Extended Filters Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-4 border-t border-slate-100">
-                        {/* Function Filter */}
-                        <div className="relative">
-                            <select
-                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedFunction}
-                                onChange={(e) => setSelectedFunction(e.target.value)}
-                            >
-                                {functions.map(f => <option key={f} value={f}>{f === 'All' ? 'All Functions' : f}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                        </div>
-
-                        {/* Sub-Function Filter */}
-                        <div className="relative">
-                            <select
-                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedSubFunction}
-                                onChange={(e) => setSelectedSubFunction(e.target.value)}
-                            >
-                                {subFunctions.map(f => <option key={f} value={f}>{f === 'All' ? 'All Sub-Functions' : f}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                        </div>
-
-                        {/* Employee Type Filter */}
-                        <div className="relative">
-                            <select
-                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedEmployeeType}
-                                onChange={(e) => setSelectedEmployeeType(e.target.value)}
-                            >
-                                {employeeTypes.map(f => <option key={f} value={f}>{f === 'All' ? 'All Emp Types' : f}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                        </div>
-
-                        {/* Region Filter */}
-                        <div className="relative">
-                            <select
-                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedRegion}
-                                onChange={(e) => setSelectedRegion(e.target.value)}
-                            >
-                                {regions.map(f => <option key={f} value={f}>{f === 'All' ? 'All Regions' : f}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                        </div>
-
-                        {/* Scrum Filter */}
-                        <div className="relative">
-                            <select
-                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedScrum}
-                                onChange={(e) => setSelectedScrum(e.target.value)}
-                            >
-                                {scrumTeams.map(f => <option key={f} value={f}>{f === 'All' ? 'All Scrum Teams' : f}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                        </div>
-
-                        {/* COE Filter */}
-                        <div className="relative">
-                            <select
-                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedCoe}
-                                onChange={(e) => setSelectedCoe(e.target.value)}
-                            >
-                                {coes.map(f => <option key={f} value={f}>{f === 'All' ? 'All COEs' : f}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                        </div>
+                        <MultiSelectCombobox
+                            label="Function"
+                            options={functions}
+                            selectedValues={selectedFunctions}
+                            onChange={setSelectedFunctions}
+                            placeholder="All Functions"
+                        />
+                        <MultiSelectCombobox
+                            label="Sub-Function"
+                            options={subFunctions}
+                            selectedValues={selectedSubFunctions}
+                            onChange={setSelectedSubFunctions}
+                            placeholder="All Sub-Functions"
+                        />
+                        <MultiSelectCombobox
+                            label="Emp Type"
+                            options={employeeTypes}
+                            selectedValues={selectedEmployeeTypes}
+                            onChange={setSelectedEmployeeTypes}
+                            placeholder="All Emp Types"
+                        />
+                        <MultiSelectCombobox
+                            label="Region"
+                            options={regions}
+                            selectedValues={selectedRegions}
+                            onChange={setSelectedRegions}
+                            placeholder="All Regions"
+                        />
+                        <MultiSelectCombobox
+                            label="Scrum Team"
+                            options={scrumTeams}
+                            selectedValues={selectedScrumTeams}
+                            onChange={setSelectedScrumTeams}
+                            placeholder="All Scrum Teams"
+                        />
+                        <MultiSelectCombobox
+                            label="COE"
+                            options={coes}
+                            selectedValues={selectedCoes}
+                            onChange={setSelectedCoes}
+                            placeholder="All COEs"
+                        />
                     </div>
                 </div>
 
