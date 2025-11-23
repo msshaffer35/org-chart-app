@@ -140,7 +140,7 @@ const OrgNode = ({ id, data, selected }) => {
                             <div key={idx} className="flex items-start text-xs">
                                 <span className="font-semibold text-gray-500 mr-1">{field.label}:</span>
                                 <span
-                                    className="font-medium truncate"
+                                    className="font-medium whitespace-normal"
                                     style={{ color: field.color }}
                                     title={field.value}
                                 >
