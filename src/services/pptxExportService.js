@@ -63,6 +63,11 @@ export const exportToPptx = async (nodes, edges, settings) => {
         const toInchY = (y) => ((y - minY) * scale + offsetY) * PX_TO_INCH;
         const toInchDim = (v) => (v * scale) * PX_TO_INCH;
 
+        // Font scaling: 14px (web) -> 14pt (pptx) is too big if chart is scaled down.
+        // We need to scale the font size by the chart scale factor.
+        // Also, px to pt conversion is roughly 0.75 (96px = 1in, 72pt = 1in).
+        const scaleFontSize = (px) => Math.max(4, px * 0.75 * scale); // Min 4pt
+
         // 3. Draw Nodes
         nodes.forEach(node => {
             const x = toInchX(node.position.x);
@@ -70,14 +75,18 @@ export const exportToPptx = async (nodes, edges, settings) => {
 
             if (node.type === 'org' || !node.type) {
                 const w = toInchDim(256);
-                const h = toInchDim(160);
+                // Height might need to grow if many fields, but for now fixed or calculated?
+                // Let's use the node height from ReactFlow if available, else default.
+                // But ReactFlow height might not include overlays if they expand.
+                // Let's stick to a base height but maybe allow overflow or just draw.
+                const h = toInchDim(node.height || 200);
 
                 // Background Card
                 slide.addShape(pres.ShapeType.rect, {
                     x: x, y: y, w: w, h: h,
                     fill: { color: 'FFFFFF' },
-                    line: { color: 'E5E7EB', width: 1 },
-                    shadow: { type: 'outer', color: '000000', opacity: 0.1, blur: 3, offset: 2 }
+                    line: { color: 'E5E7EB', width: 1 * scale },
+                    shadow: { type: 'outer', color: '000000', opacity: 0.1, blur: 3 * scale, offset: 2 * scale }
                 });
 
                 // Color Strip
@@ -98,12 +107,13 @@ export const exportToPptx = async (nodes, edges, settings) => {
                 const imgSize = toInchDim(48);
                 const textStartX = x + toInchDim(16);
                 let textOffsetX = 0;
+                const contentStartY = y + toInchDim(20);
 
                 if (node.data.image) {
                     slide.addImage({
                         path: node.data.image,
                         x: textStartX,
-                        y: y + toInchDim(20),
+                        y: contentStartY,
                         w: imgSize,
                         h: imgSize,
                         rounding: true
@@ -113,65 +123,100 @@ export const exportToPptx = async (nodes, edges, settings) => {
                     // Placeholder Circle
                     slide.addShape(pres.ShapeType.ellipse, {
                         x: textStartX,
-                        y: y + toInchDim(20),
+                        y: contentStartY,
                         w: imgSize,
                         h: imgSize,
                         fill: { color: 'F3F4F6' }, // gray-100
-                        line: { color: 'E5E7EB', width: 1 }
+                        line: { color: 'E5E7EB', width: 1 * scale }
                     });
                     textOffsetX = imgSize + toInchDim(12);
                 }
 
+                // Text Positioning
+                let currentY = contentStartY;
+                const textWidth = w - toInchDim(32) - textOffsetX;
+                const textX = textStartX + textOffsetX;
+
                 // Name
+                const nameSize = scaleFontSize(14);
                 slide.addText(node.data.label || 'Name', {
-                    x: textStartX + textOffsetX,
-                    y: y + toInchDim(20),
-                    w: w - toInchDim(32) - textOffsetX,
-                    h: toInchDim(24),
+                    x: textX,
+                    y: currentY,
+                    w: textWidth,
+                    h: nameSize * 1.5 * PX_TO_INCH * 2, // Approx height
                     fontFace: 'Arial',
-                    fontSize: 14,
+                    fontSize: nameSize,
                     bold: true,
                     color: '1F2937',
                     align: 'left',
-                    valign: 'middle'
+                    valign: 'top'
                 });
+                currentY += toInchDim(20); // Spacing
 
                 // Role
+                const roleSize = scaleFontSize(12);
                 slide.addText(node.data.role || 'Role', {
-                    x: textStartX + textOffsetX,
-                    y: y + toInchDim(44),
-                    w: w - toInchDim(32) - textOffsetX,
-                    h: toInchDim(20),
+                    x: textX,
+                    y: currentY,
+                    w: textWidth,
+                    h: roleSize * 1.5 * PX_TO_INCH * 2,
                     fontFace: 'Arial',
-                    fontSize: 11,
+                    fontSize: roleSize,
                     color: '6B7280',
                     align: 'left',
-                    valign: 'middle'
+                    valign: 'top'
                 });
+                currentY += toInchDim(18);
 
-                // Department
+                // Overlay Fields (CoE, Regions, etc.)
+                if (node.data.overlayFields && node.data.overlayFields.length > 0) {
+                    currentY += toInchDim(4); // small gap
+                    const fieldLabelSize = scaleFontSize(10);
+                    const fieldValueSize = scaleFontSize(10);
+
+                    node.data.overlayFields.forEach(field => {
+                        slide.addText([
+                            { text: field.label + ": ", options: { bold: true, color: '6B7280' } },
+                            { text: field.value, options: { bold: false, color: field.color || '1F2937' } }
+                        ], {
+                            x: textX,
+                            y: currentY,
+                            w: textWidth,
+                            h: fieldValueSize * 1.5 * PX_TO_INCH * 2,
+                            fontFace: 'Arial',
+                            fontSize: fieldValueSize,
+                            align: 'left',
+                            valign: 'top'
+                        });
+                        currentY += toInchDim(14);
+                    });
+                }
+
+                // Department (at bottom)
                 if (node.data.department) {
+                    const deptSize = scaleFontSize(10);
                     slide.addText(node.data.department, {
-                        x: textStartX,
-                        y: y + h - toInchDim(30),
+                        x: x + toInchDim(16),
+                        y: y + h - toInchDim(24),
                         w: w - toInchDim(32),
-                        h: toInchDim(20),
+                        h: deptSize * 1.5 * PX_TO_INCH * 2,
                         fontFace: 'Arial',
-                        fontSize: 10,
+                        fontSize: deptSize,
                         color: '9CA3AF',
                         align: 'left',
-                        valign: 'middle'
+                        valign: 'bottom'
                     });
                 }
             }
             else if (node.type === 'text') {
                 const w = toInchDim(node.width || 150);
                 const h = toInchDim(node.height || 50);
+                const fontSize = scaleFontSize(parseInt(node.data.fontSize) || 14);
 
                 slide.addText(node.data.label || 'Text', {
                     x: x, y: y, w: w, h: h,
                     fontFace: 'Arial',
-                    fontSize: parseInt(node.data.fontSize) || 14,
+                    fontSize: fontSize,
                     bold: node.data.isBold,
                     italic: node.data.isItalic,
                     color: (node.data.textColor || '#1f2937').replace('#', ''),
@@ -190,13 +235,13 @@ export const exportToPptx = async (nodes, edges, settings) => {
             if (!sourceNode || !targetNode) return;
 
             const sX = toInchX(sourceNode.position.x + (sourceNode.width || 256) / 2);
-            const sY = toInchY(sourceNode.position.y + (sourceNode.height || 160));
+            const sY = toInchY(sourceNode.position.y + (sourceNode.height || 160)); // Use fixed height for connection point to be safe? Or node.height?
             const tX = toInchX(targetNode.position.x + (targetNode.width || 256) / 2);
             const tY = toInchY(targetNode.position.y);
 
             const isDotted = edge.style?.strokeDasharray;
             const lineColor = '9CA3AF';
-            const lineWidth = 1.5;
+            const lineWidth = 1.5 * scale;
 
             // Check connector type
             const isStraight = settings?.edgeType === 'straight';
