@@ -1,19 +1,16 @@
-import React, { useEffect } from 'react';
-import OrgChartCanvas from './components/Canvas/OrgChartCanvas';
-import MainLayout from './components/Layout/MainLayout';
-import useStore from './store/useStore';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ProjectList from './pages/ProjectList';
+import Editor from './pages/Editor';
 
 function App() {
-  const loadChart = useStore((state) => state.loadChart);
-
-  useEffect(() => {
-    loadChart();
-  }, [loadChart]);
-
   return (
-    <MainLayout>
-      <OrgChartCanvas />
-    </MainLayout>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ProjectList />} />
+        <Route path="/editor/:projectId" element={<Editor />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
