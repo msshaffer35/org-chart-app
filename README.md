@@ -16,6 +16,16 @@ A modern, interactive organization chart builder built with React, Vite, and Rea
     -   **Node Properties**: Edit details and styling for each node.
     -   **Conditional Formatting**: Highlight nodes based on rules (e.g., Department = Engineering).
     -   **View Settings**: Toggle visibility of fields (Name, Role, Department, Image).
+    -   **Overlays**: Visualize cross-functional teams and attributes with color-coded overlays:
+        -   **Scrum Teams**: Highlight members of specific scrum teams.
+        -   **Center of Excellence (CoE)**: Identify members of Digital, AI, or Data CoEs.
+        -   **Regions**: Show supported regions (US, Global, EMEA, APAC).
+        -   **Functions**: Visualize core functions (HR, Finance, Sales, Marketing).
+        -   **Sub-Functions**: Drill down into specific areas (e.g., Recruitment, B2B Marketing).
+        -   **Employee Type**: Distinguish between Full-time, Part-time, Contractors, and Vendors.
+    -   **Detailed Attributes**:
+        -   **Role / Remit**: Add detailed descriptions of an individual's responsibilities.
+        -   **Comments / Notes**: Capture additional context or notes for any employee.
 
 ## Tech Stack
 
