@@ -146,6 +146,16 @@ const RightPanel = () => {
                                     </div>
 
                                     <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Role / Remit</label>
+                                        <textarea
+                                            value={selectedNode.data.roleRemit || ''}
+                                            onChange={(e) => updateNodeData(selectedNode.id, { roleRemit: e.target.value })}
+                                            placeholder="Describe the role or remit..."
+                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[60px]"
+                                        />
+                                    </div>
+
+                                    <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Comments / Notes</label>
                                         <textarea
                                             value={selectedNode.data.comments || ''}
