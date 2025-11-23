@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil, Search, Filter, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 
 const ProjectList = () => {
     const navigate = useNavigate();
@@ -11,9 +11,14 @@ const ProjectList = () => {
     const [editingProject, setEditingProject] = useState(null);
 
     // Search & Filter State
-    const [searchQuery, setSearchQuery] = useState('');
+    const [globalSearch, setGlobalSearch] = useState('');
+    const [selectedAccount, setSelectedAccount] = useState('All');
+    const [accountSearch, setAccountSearch] = useState('');
+    const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
     const [selectedDept, setSelectedDept] = useState('All');
-    const [sortBy, setSortBy] = useState('dateCollected-desc'); // dateCollected-desc, dateCollected-asc, account-asc, lastModified-desc
+    const [sortBy, setSortBy] = useState('dateCollected-desc');
+
+    const accountDropdownRef = useRef(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -26,18 +31,51 @@ const ProjectList = () => {
         loadProjects();
     }, [loadProjects]);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target)) {
+                setIsAccountDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // Derived Data
+    const accounts = useMemo(() => {
+        const accs = new Set(projectList.map(p => p.account).filter(Boolean));
+        return ['All', ...Array.from(accs).sort()];
+    }, [projectList]);
+
     const departments = useMemo(() => {
         const depts = new Set(projectList.map(p => p.department).filter(Boolean));
         return ['All', ...Array.from(depts).sort()];
     }, [projectList]);
 
+    const filteredAccounts = useMemo(() => {
+        return accounts.filter(acc =>
+            acc.toLowerCase().includes(accountSearch.toLowerCase())
+        );
+    }, [accounts, accountSearch]);
+
     const filteredProjects = useMemo(() => {
         return projectList
             .filter(project => {
-                const matchesSearch = (project.account || '').toLowerCase().includes(searchQuery.toLowerCase());
+                // Global Search (Account, Dept, Date)
+                const searchLower = globalSearch.toLowerCase();
+                const matchesGlobal =
+                    (project.account || '').toLowerCase().includes(searchLower) ||
+                    (project.department || '').toLowerCase().includes(searchLower) ||
+                    (project.dateCollected || '').includes(searchLower);
+
+                // Account Filter
+                const matchesAccount = selectedAccount === 'All' || project.account === selectedAccount;
+
+                // Department Filter
                 const matchesDept = selectedDept === 'All' || project.department === selectedDept;
-                return matchesSearch && matchesDept;
+
+                return matchesGlobal && matchesAccount && matchesDept;
             })
             .sort((a, b) => {
                 switch (sortBy) {
@@ -53,7 +91,7 @@ const ProjectList = () => {
                         return 0;
                 }
             });
-    }, [projectList, searchQuery, selectedDept, sortBy]);
+    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy]);
 
     const openCreateModal = () => {
         setEditingProject(null);
@@ -129,19 +167,76 @@ const ProjectList = () => {
                 </div>
 
                 {/* Search & Filter Bar */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-                    <div className="relative flex-1 w-full">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col gap-4">
+                    {/* Global Search */}
+                    <div className="relative w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             type="text"
-                            placeholder="Search projects..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search all fields (Account, Department, Date)..."
+                            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            value={globalSearch}
+                            onChange={(e) => setGlobalSearch(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-4 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-48">
+
+                    <div className="flex flex-col md:flex-row gap-4">
+                        {/* Account Combobox */}
+                        <div className="relative flex-1" ref={accountDropdownRef}>
+                            <div
+                                className="relative cursor-pointer"
+                                onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                            >
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                <input
+                                    type="text"
+                                    readOnly
+                                    placeholder="Filter by Account"
+                                    className="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer bg-white"
+                                    value={selectedAccount === 'All' ? 'All Accounts' : selectedAccount}
+                                />
+                                <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+                            </div>
+
+                            {isAccountDropdownOpen && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+                                    <div className="p-2 sticky top-0 bg-white border-b border-slate-100">
+                                        <input
+                                            type="text"
+                                            placeholder="Type to filter accounts..."
+                                            className="w-full px-3 py-1.5 border border-slate-200 rounded-md text-sm focus:outline-none focus:border-blue-500"
+                                            value={accountSearch}
+                                            onChange={(e) => setAccountSearch(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="py-1">
+                                        {filteredAccounts.length === 0 ? (
+                                            <div className="px-4 py-2 text-sm text-slate-500">No accounts found</div>
+                                        ) : (
+                                            filteredAccounts.map(acc => (
+                                                <div
+                                                    key={acc}
+                                                    className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 flex items-center justify-between ${selectedAccount === acc ? 'bg-blue-50 text-blue-600' : 'text-slate-700'}`}
+                                                    onClick={() => {
+                                                        setSelectedAccount(acc);
+                                                        setIsAccountDropdownOpen(false);
+                                                        setAccountSearch('');
+                                                    }}
+                                                >
+                                                    <span>{acc === 'All' ? 'All Accounts' : acc}</span>
+                                                    {selectedAccount === acc && <Check size={14} />}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Department Filter */}
+                        <div className="relative flex-1">
                             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <select
                                 className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white cursor-pointer"
@@ -152,8 +247,11 @@ const ProjectList = () => {
                                     <option key={dept} value={dept}>{dept === 'All' ? 'All Departments' : dept}</option>
                                 ))}
                             </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                         </div>
-                        <div className="relative flex-1 md:w-56">
+
+                        {/* Sort Options */}
+                        <div className="relative flex-1">
                             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <select
                                 className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white cursor-pointer"
@@ -165,6 +263,7 @@ const ProjectList = () => {
                                 <option value="account-asc">Account Name (A-Z)</option>
                                 <option value="lastModified-desc">Last Modified</option>
                             </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                         </div>
                     </div>
                 </div>
