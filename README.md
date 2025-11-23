@@ -1,16 +1,90 @@
-# React + Vite
+# Org Chart App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, interactive organization chart builder built with React, Vite, and React Flow. Create, edit, and manage organizational structures with ease.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+-   **Interactive Canvas**: Drag and drop interface for building org charts.
+-   **Node Types**:
+    -   **Employee Cards**: Display name, role, department, and image.
+    -   **Text Boxes**: Add movable, editable text annotations with formatting options (Bold, Italic, Color, Size).
+-   **Smart Layout**: Automatic tree layout for organizational structures.
+-   **Data Management**:
+    -   **Import CSV**: Bulk import employee data.
+    -   **Local Storage**: Auto-saves your work to your browser's local storage.
+-   **Customization**:
+    -   **Node Properties**: Edit details and styling for each node.
+    -   **Conditional Formatting**: Highlight nodes based on rules (e.g., Department = Engineering).
+    -   **View Settings**: Toggle visibility of fields (Name, Role, Department, Image).
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-   **Framework**: [React](https://react.dev/)
+-   **Build Tool**: [Vite](https://vitejs.dev/)
+-   **Diagramming**: [React Flow](https://reactflow.dev/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+-   **Icons**: [Lucide React](https://lucide.dev/)
+-   **CSV Parsing**: [PapaParse](https://www.papaparse.com/)
+-   **Layout Engine**: [Dagre](https://github.com/dagrejs/dagre)
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+
+-   Node.js (v14 or higher)
+-   npm (v6 or higher)
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd org-chart-app
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+
+4.  Open your browser and navigate to `http://localhost:5173`.
+
+## Usage
+
+### Creating a Chart
+
+1.  **Add Nodes**: Drag "Employee Card" or "Text Box" from the left panel toolbox onto the canvas.
+2.  **Connect Nodes**: Drag from the bottom handle of a manager node to the top handle of a report node to create a reporting relationship.
+3.  **Edit Details**: Click on a node to open the Right Panel.
+    -   For **Employees**: Edit Name, Role, Department, and Header Color.
+    -   For **Text**: Edit content and apply formatting (Bold, Italic, Size, Color).
+
+### Importing Data
+
+1.  Click the "Import CSV" button in the left panel.
+2.  Upload a CSV file with the following columns: `id`, `name`, `role`, `department`, `managerId`.
+3.  Map the columns and import to auto-generate the chart.
+
+### Customizing View
+
+1.  Click on the canvas background to see "Chart Settings" in the Right Panel.
+2.  Adjust **Node Spacing** and **Connection Type** (Curved, Step, Straight).
+3.  Toggle **Visible Fields** to show/hide specific information.
+4.  Add **Conditional Formatting** rules to color-code nodes automatically.
+
+## Project Structure
+
+-   `src/components`: Reusable UI components (Canvas, Nodes, Layout).
+-   `src/pages`: Application pages (ProjectList, Editor).
+-   `src/store`: Global state management using Zustand.
+-   `src/utils`: Helper functions (CSV parsing, layout logic).
+
+## License
+
+This project is private and proprietary.
