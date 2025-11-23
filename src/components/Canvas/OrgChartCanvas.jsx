@@ -29,8 +29,48 @@ const initialEdges = [
 
 const OrgChartCanvas = () => {
     const {
-        nodes, edges, onNodesChange, onEdgesChange, onConnect, reparentNode, deleteNode
+        nodes, edges, onNodesChange, onEdgesChange, onConnect, reparentNode, deleteNode, addNode
     } = useStore();
+
+    const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
+
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+    const onDrop = useCallback(
+        (event) => {
+            event.preventDefault();
+
+            const type = event.dataTransfer.getData('application/reactflow');
+
+            // check if the dropped element is valid
+            if (typeof type === 'undefined' || !type) {
+                return;
+            }
+
+            const position = reactFlowInstance.screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+
+            const newNode = {
+                id: `node-${Date.now()}`,
+                type,
+                position,
+                data: { 
+                    label: 'New Employee', 
+                    role: 'New Role', 
+                    department: 'Department', 
+                    color: 'bg-blue-500' 
+                },
+            };
+
+            addNode(newNode);
+        },
+        [reactFlowInstance, addNode],
+    );
 
     const onNodeDragStop = useCallback((event, node) => {
         // Simple collision detection
@@ -100,6 +140,9 @@ const OrgChartCanvas = () => {
                 onConnect={onConnect}
                 onNodeDragStop={onNodeDragStop}
                 onNodesDelete={onNodesDelete}
+                onInit={setReactFlowInstance}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
                 nodeTypes={nodeTypes}
                 fitView
                 attributionPosition="bottom-right"
