@@ -12,13 +12,21 @@ const ProjectList = () => {
 
     // Search & Filter State
     const [globalSearch, setGlobalSearch] = useState('');
+
+    // Account Filter State
     const [selectedAccount, setSelectedAccount] = useState('All');
     const [accountSearch, setAccountSearch] = useState('');
     const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+
+    // Department Filter State
     const [selectedDept, setSelectedDept] = useState('All');
+    const [deptSearch, setDeptSearch] = useState('');
+    const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+
     const [sortBy, setSortBy] = useState('dateCollected-desc');
 
     const accountDropdownRef = useRef(null);
+    const deptDropdownRef = useRef(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -31,11 +39,14 @@ const ProjectList = () => {
         loadProjects();
     }, [loadProjects]);
 
-    // Close dropdown when clicking outside
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target)) {
                 setIsAccountDropdownOpen(false);
+            }
+            if (deptDropdownRef.current && !deptDropdownRef.current.contains(event.target)) {
+                setIsDeptDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -58,6 +69,12 @@ const ProjectList = () => {
             acc.toLowerCase().includes(accountSearch.toLowerCase())
         );
     }, [accounts, accountSearch]);
+
+    const filteredDepartments = useMemo(() => {
+        return departments.filter(dept =>
+            dept.toLowerCase().includes(deptSearch.toLowerCase())
+        );
+    }, [departments, deptSearch]);
 
     const filteredProjects = useMemo(() => {
         return projectList
@@ -235,19 +252,58 @@ const ProjectList = () => {
                             )}
                         </div>
 
-                        {/* Department Filter */}
-                        <div className="relative flex-1">
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                            <select
-                                className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                value={selectedDept}
-                                onChange={(e) => setSelectedDept(e.target.value)}
+                        {/* Department Combobox */}
+                        <div className="relative flex-1" ref={deptDropdownRef}>
+                            <div
+                                className="relative cursor-pointer"
+                                onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
                             >
-                                {departments.map(dept => (
-                                    <option key={dept} value={dept}>{dept === 'All' ? 'All Departments' : dept}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                <input
+                                    type="text"
+                                    readOnly
+                                    placeholder="Filter by Department"
+                                    className="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer bg-white"
+                                    value={selectedDept === 'All' ? 'All Departments' : selectedDept}
+                                />
+                                <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+                            </div>
+
+                            {isDeptDropdownOpen && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+                                    <div className="p-2 sticky top-0 bg-white border-b border-slate-100">
+                                        <input
+                                            type="text"
+                                            placeholder="Type to filter departments..."
+                                            className="w-full px-3 py-1.5 border border-slate-200 rounded-md text-sm focus:outline-none focus:border-blue-500"
+                                            value={deptSearch}
+                                            onChange={(e) => setDeptSearch(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="py-1">
+                                        {filteredDepartments.length === 0 ? (
+                                            <div className="px-4 py-2 text-sm text-slate-500">No departments found</div>
+                                        ) : (
+                                            filteredDepartments.map(dept => (
+                                                <div
+                                                    key={dept}
+                                                    className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 flex items-center justify-between ${selectedDept === dept ? 'bg-blue-50 text-blue-600' : 'text-slate-700'}`}
+                                                    onClick={() => {
+                                                        setSelectedDept(dept);
+                                                        setIsDeptDropdownOpen(false);
+                                                        setDeptSearch('');
+                                                    }}
+                                                >
+                                                    <span>{dept === 'All' ? 'All Departments' : dept}</span>
+                                                    {selectedDept === dept && <Check size={14} />}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sort Options */}
