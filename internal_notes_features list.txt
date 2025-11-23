@@ -8,25 +8,21 @@ Main Panel features:
 - Need to add button that allows filtering by overlay buttons to only show the org parts based on certain characteristic (e.g. filter US and show only those boxes with direct reports above to understand structure)
 
 
-Project page features:
-- Need to add for projects a way to relate same accounts. This will be critical for tracking changes overtime and for relating org charts received at different times to have a comprehensive view of the organization
+New Analyze page that: 
+- Analyze/change mode where you create future forward type org charts that does a diff comparison (e.g. changed titles, moved name box to different direct report, removed/added name boxes)
+- Track changes in the org chart from a previous version (has some type of comparison tool that shows differences). For example Company A Jan 2024 vs Company A Jan 2025.
+- Analyze feature that compares org charts of different companies for similarities and differences
+- Have a way to pull in multiple org charts to review at the same time for comparisons
+- Need a way to add in "analysis" commentary on the organization of ways of working, pro/cons of current org structure, considerations for future
+- Need way to have "industry standard" org charts that are high level ideas of what current industry looks like so you can compare how similar or different the org chart is
 
 
-- New Analyze page that: 
-	- Analyze/change mode where you create future forward type org charts that does a diff comparison (e.g. changed titles, moved name box to different direct report, removed/added name boxes)
-	- Track changes in the org chart from a previous version (has some type of comparison tool that shows differences). For example Company A Jan 2024 vs Company A Jan 2025.
-	- Analyze feature that compares org charts of different companies for similarities and differences
-	- Have a way to pull in multiple org charts to review at the same time for comparisons
-	- Need a way to add in "analysis" commentary on the organization of ways of working, pro/cons of current org structure, considerations for future
-	- Need way to have "industry standard" org charts that are high level ideas of what current industry looks like so you can compare how similar or different the org chart is
+Data storage layer:
+- Need to understand the data storage layer on this to run analysis outside the program
+- Add place for attachment of word document interviews with specific people to align on what told us about their position
+- Need to have separate databases: Actual Org chart collected & tagged, Future org chart scenarios, Blinded org charts to standardized definitions
 
 
-- Data storage layer
-	- Need to understand the data storage layer on this to run analysis outside the program
-	- Add place for attachment of word document interviews with specific people to align on what told us about their position
-	- Need to have separate databases: Actual Org chart collected & tagged, Future org chart scenarios, Blinded org charts to standardized definitions
-
-
-- Blinded data layer
-	- Need a way to blind the org chart on titles, department names. So need a way to show alternative naming system when possible that is standardized across all org charts
+Blinded data layer:
+- Need a way to blind the org chart on titles, department names. So need a way to show alternative naming system when possible that is standardized across all org charts
 
