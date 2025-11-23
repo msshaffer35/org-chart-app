@@ -104,6 +104,20 @@ const LeftPanel = () => {
                             <p className="text-xs text-gray-400">Drag to canvas</p>
                         </div>
                     </div>
+
+                    <div
+                        className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm cursor-grab hover:border-blue-400 hover:shadow-md transition-all flex items-center gap-3"
+                        onDragStart={(event) => onDragStart(event, 'text')}
+                        draggable
+                    >
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                            <FilePlus size={18} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-700">Text Box</p>
+                            <p className="text-xs text-gray-400">Drag to canvas</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

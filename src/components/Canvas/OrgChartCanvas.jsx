@@ -8,11 +8,13 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import useStore from '../../store/useStore';
 import OrgNode from '../Nodes/OrgNode';
+import TextNode from '../Nodes/TextNode';
 import { getLayoutedElements } from '../../utils/layout';
 import { parseCSV } from '../../utils/csvImporter';
 
 const nodeTypes = {
     org: OrgNode,
+    text: TextNode,
 };
 
 // Initial dummy data for testing
@@ -55,17 +57,30 @@ const OrgChartCanvas = () => {
                 y: event.clientY,
             });
 
-            const newNode = {
-                id: `node-${Date.now()}`,
-                type,
-                position,
-                data: { 
-                    label: 'New Employee', 
-                    role: 'New Role', 
-                    department: 'Department', 
-                    color: 'bg-blue-500' 
-                },
-            };
+            let newNode;
+
+            if (type === 'org') {
+                newNode = {
+                    id: `node-${Date.now()}`,
+                    type,
+                    position,
+                    data: {
+                        label: 'New Employee',
+                        role: 'New Role',
+                        department: 'Department',
+                        color: 'bg-blue-500'
+                    },
+                };
+            } else if (type === 'text') {
+                newNode = {
+                    id: `text-${Date.now()}`,
+                    type,
+                    position,
+                    data: {
+                        label: 'Double click to edit'
+                    },
+                };
+            }
 
             addNode(newNode);
         },
