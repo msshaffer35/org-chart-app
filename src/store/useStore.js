@@ -291,6 +291,15 @@ const useStore = create((set, get) => ({
         }
     },
 
+    updateProject: async (id, metadata) => {
+        try {
+            await storageService.updateProjectMetadata(id, metadata);
+            get().loadProjects();
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
     deleteProject: async (id) => {
         try {
             await storageService.deleteProject(id);

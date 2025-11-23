@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Calendar, Building2, Briefcase, Pencil } from 'lucide-react';
 
 const ProjectList = () => {
     const navigate = useNavigate();
-    const { projectList, loadProjects, createProject, deleteProject } = useStore();
-    const [isCreating, setIsCreating] = useState(false);
+    const { projectList, loadProjects, createProject, updateProject, deleteProject } = useStore();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -20,17 +21,42 @@ const ProjectList = () => {
         loadProjects();
     }, [loadProjects]);
 
-    const handleCreate = async (e) => {
+    const openCreateModal = () => {
+        setEditingProject(null);
+        setFormData({
+            account: '',
+            department: '',
+            dateCollected: new Date().toISOString().split('T')[0]
+        });
+        setShowModal(true);
+    };
+
+    const openEditModal = (e, project) => {
+        e.stopPropagation();
+        setEditingProject(project);
+        setFormData({
+            account: project.account || '',
+            department: project.department || '',
+            dateCollected: project.dateCollected || ''
+        });
+        setShowModal(true);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsCreating(true);
+        setIsSubmitting(true);
         try {
-            const id = await createProject(formData);
-            navigate(`/editor/${id}`);
-        } catch (error) {
-            console.error("Failed to create project", error);
-        } finally {
-            setIsCreating(false);
+            if (editingProject) {
+                await updateProject(editingProject.id, formData);
+            } else {
+                const id = await createProject(formData);
+                navigate(`/editor/${id}`);
+            }
             setShowModal(false);
+        } catch (error) {
+            console.error("Failed to save project", error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -60,7 +86,7 @@ const ProjectList = () => {
                         <p className="text-slate-500 mt-2">Manage your organization charts</p>
                     </div>
                     <button
-                        onClick={() => setShowModal(true)}
+                        onClick={openCreateModal}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
                     >
                         <Plus size={20} />
@@ -76,7 +102,7 @@ const ProjectList = () => {
                         <h3 className="text-lg font-medium text-slate-900">No projects yet</h3>
                         <p className="text-slate-500 mt-2 mb-6">Create your first organization chart to get started</p>
                         <button
-                            onClick={() => setShowModal(true)}
+                            onClick={openCreateModal}
                             className="text-blue-600 font-medium hover:text-blue-700"
                         >
                             Create a project
@@ -95,7 +121,7 @@ const ProjectList = () => {
                                 </div>
                                 <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
-                                        <div>
+                                        <div className="flex-1 min-w-0">
                                             <h3 className="font-semibold text-slate-900 truncate pr-2" title={project.account}>
                                                 {project.account || 'Untitled Account'}
                                             </h3>
@@ -104,13 +130,22 @@ const ProjectList = () => {
                                                 {project.department || 'No Department'}
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={(e) => handleDelete(e, project.id)}
-                                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
-                                            title="Delete project"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={(e) => openEditModal(e, project)}
+                                                className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50"
+                                                title="Edit project"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => handleDelete(e, project.id)}
+                                                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                                                title="Delete project"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="mt-auto pt-4 border-t border-slate-100 space-y-1">
@@ -128,12 +163,14 @@ const ProjectList = () => {
                     </div>
                 )}
 
-                {/* Create Project Modal */}
+                {/* Create/Edit Project Modal */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-                            <h2 className="text-xl font-bold text-slate-900 mb-4">New Project</h2>
-                            <form onSubmit={handleCreate}>
+                            <h2 className="text-xl font-bold text-slate-900 mb-4">
+                                {editingProject ? 'Edit Project' : 'New Project'}
+                            </h2>
+                            <form onSubmit={handleSubmit}>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Account Name</label>
@@ -178,10 +215,10 @@ const ProjectList = () => {
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={isCreating}
+                                        disabled={isSubmitting}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                                     >
-                                        {isCreating ? 'Creating...' : 'Create Project'}
+                                        {isSubmitting ? 'Saving...' : (editingProject ? 'Save Changes' : 'Create Project')}
                                     </button>
                                 </div>
                             </form>
