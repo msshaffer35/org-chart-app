@@ -11,6 +11,8 @@ import OrgNode from '../Nodes/OrgNode';
 import TextNode from '../Nodes/TextNode';
 import { getLayoutedElements } from '../../utils/layout';
 import { parseCSV } from '../../utils/csvImporter';
+import { exportToPptx } from '../../services/pptxExportService';
+import { Download } from 'lucide-react';
 
 const nodeTypes = {
     org: OrgNode,
@@ -31,7 +33,7 @@ const initialEdges = [
 
 const OrgChartCanvas = () => {
     const {
-        nodes, edges, onNodesChange, onEdgesChange, onConnect, reparentNode, deleteNode, addNode
+        nodes, edges, settings, onNodesChange, onEdgesChange, onConnect, reparentNode, deleteNode, addNode
     } = useStore();
 
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
@@ -133,6 +135,18 @@ const OrgChartCanvas = () => {
         });
     }, [deleteNode]);
 
+    const handleExportPPTX = async () => {
+        console.log("Export button clicked");
+        console.log("Nodes:", nodes);
+        console.log("Edges:", edges);
+        try {
+            await exportToPptx(nodes, edges, settings);
+        } catch (error) {
+            console.error("Export failed:", error);
+            alert("Export failed. See console.");
+        }
+    };
+
     // Load initial data with layout if empty (optional, can be moved to App or store)
     useEffect(() => {
         if (nodes.length === 0 && initialNodes.length > 0) {
@@ -146,7 +160,7 @@ const OrgChartCanvas = () => {
     }, []);
 
     return (
-        <div className="w-full h-full">
+        <div className="w-full h-full relative">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -169,6 +183,17 @@ const OrgChartCanvas = () => {
                     if (n.type === 'org') return '#3b82f6';
                     return '#eee';
                 }} />
+
+                <Panel position="top-right" className="bg-white p-2 rounded shadow-md flex gap-2">
+                    <button
+                        onClick={handleExportPPTX}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-medium transition-colors"
+                        title="Export to PowerPoint"
+                    >
+                        <Download size={16} />
+                        Export PPTX
+                    </button>
+                </Panel>
             </ReactFlow>
         </div>
     );
