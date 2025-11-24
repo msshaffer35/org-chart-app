@@ -20,7 +20,3 @@ Data storage layer:
 - Add place for attachment of word document interviews with specific people to align on what told us about their position
 - Need to have separate databases: Actual Org chart collected & tagged, Future org chart scenarios, Blinded org charts to standardized definitions
 
-
-Blinded data layer:
-- Need a way to blind the org chart on titles, department names. So need a way to show alternative naming system when possible that is standardized across all org charts
-
