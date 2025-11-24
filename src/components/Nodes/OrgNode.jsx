@@ -181,7 +181,7 @@ const OrgNode = ({ id, data, selected }) => {
                 </div>
 
                 {/* Overlay Text Fields */}
-                {data.overlayFields && data.overlayFields.length > 0 && !isDeidentified && (
+                {data.overlayFields && data.overlayFields.length > 0 && (
                     <div className="mt-2 space-y-1">
                         {data.overlayFields.map((field, idx) => (
                             <div key={idx} className="flex items-start text-xs">
@@ -218,21 +218,39 @@ const OrgNode = ({ id, data, selected }) => {
                         </div>
                         <div className="space-y-1 text-gray-500">
                             {/* Only show top stats to avoid clutter */}
-                            {Object.entries(summary.metadata.employeeTypes).map(([type, count]) => (
+                            {Object.entries(summary.metadata.employeeTypes || {}).map(([type, count]) => (
                                 <div key={type} className="flex justify-between">
                                     <span>{type}</span>
                                     <span className="font-medium">{count}</span>
                                 </div>
                             ))}
-                            {Object.entries(summary.metadata.coes).map(([coe, count]) => (
+                            {Object.entries(summary.metadata.coes || {}).map(([coe, count]) => (
                                 <div key={coe} className="flex justify-between">
                                     <span>{coe} (COE)</span>
                                     <span className="font-medium">{count}</span>
                                 </div>
                             ))}
-                            {Object.entries(summary.metadata.scrumTeams).map(([team, count]) => (
+                            {Object.entries(summary.metadata.scrumTeams || {}).map(([team, count]) => (
                                 <div key={team} className="flex justify-between">
                                     <span>{team} (Scrum)</span>
+                                    <span className="font-medium">{count}</span>
+                                </div>
+                            ))}
+                            {Object.entries(summary.metadata.regions || {}).map(([region, count]) => (
+                                <div key={region} className="flex justify-between">
+                                    <span>{region}</span>
+                                    <span className="font-medium">{count}</span>
+                                </div>
+                            ))}
+                            {Object.entries(summary.metadata.functions || {}).map(([func, count]) => (
+                                <div key={func} className="flex justify-between">
+                                    <span>{func}</span>
+                                    <span className="font-medium">{count}</span>
+                                </div>
+                            ))}
+                            {Object.entries(summary.metadata.subfunctions || {}).map(([sub, count]) => (
+                                <div key={sub} className="flex justify-between">
+                                    <span>{sub}</span>
                                     <span className="font-medium">{count}</span>
                                 </div>
                             ))}

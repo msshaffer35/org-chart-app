@@ -61,7 +61,10 @@ export const getDescendantSummary = (nodeId, edges, nodes) => {
             employeeTypes: {},
             scrumTeams: {},
             coes: {},
-            departments: {}
+            departments: {},
+            regions: {},
+            functions: {},
+            subfunctions: {}
         }
     };
 
@@ -89,6 +92,20 @@ export const getDescendantSummary = (nodeId, edges, nodes) => {
                         if (teamType.coe) {
                             summary.metadata.coes[teamType.coe] = (summary.metadata.coes[teamType.coe] || 0) + 1;
                         }
+                        if (Array.isArray(teamType.regions)) {
+                            teamType.regions.forEach(region => {
+                                summary.metadata.regions[region] = (summary.metadata.regions[region] || 0) + 1;
+                            });
+                        }
+                    }
+
+                    // Aggregate Functions and Subfunctions
+                    // Assuming these are direct properties on data, or we can check overlayFields if they are dynamic
+                    if (childNode.data.function) {
+                        summary.metadata.functions[childNode.data.function] = (summary.metadata.functions[childNode.data.function] || 0) + 1;
+                    }
+                    if (childNode.data.subfunction) {
+                        summary.metadata.subfunctions[childNode.data.subfunction] = (summary.metadata.subfunctions[childNode.data.subfunction] || 0) + 1;
                     }
                 }
 

@@ -172,8 +172,8 @@ export const exportToPptx = async (nodes, edges, settings) => {
                 layoutItems.push({ type: 'text', text: displayRole, x: textStartX + textOffsetX, y: currentY, w: textWidth, h: roleHeight, fontSize: roleSize, color: '6B7280' });
                 currentY += roleHeight + toInchDim(4);
 
-                // Overlay Fields (Only if NOT de-identified)
-                if (!isDeidentified && node.data.overlayFields && node.data.overlayFields.length > 0) {
+                // Overlay Fields (Always show if present, even in de-identified mode)
+                if (node.data.overlayFields && node.data.overlayFields.length > 0) {
                     currentY += toInchDim(4);
                     const fieldSize = scaleFontSize(10);
                     node.data.overlayFields.forEach(field => {
@@ -209,9 +209,12 @@ export const exportToPptx = async (nodes, edges, settings) => {
                 if (summary && summary.count > 0) {
                     // Estimate summary height
                     // Header + 1 line per item
-                    const itemCount = Object.keys(summary.metadata.employeeTypes).length +
-                        Object.keys(summary.metadata.coes).length +
-                        Object.keys(summary.metadata.scrumTeams).length;
+                    const itemCount = Object.keys(summary.metadata.employeeTypes || {}).length +
+                        Object.keys(summary.metadata.coes || {}).length +
+                        Object.keys(summary.metadata.scrumTeams || {}).length +
+                        Object.keys(summary.metadata.regions || {}).length +
+                        Object.keys(summary.metadata.functions || {}).length +
+                        Object.keys(summary.metadata.subfunctions || {}).length;
                     summaryHeight = toInchDim(20) + (itemCount * toInchDim(12));
                     contentBottom += summaryHeight + toInchDim(10);
                 }
@@ -328,9 +331,12 @@ export const exportToPptx = async (nodes, edges, settings) => {
                         itemY += itemH;
                     };
 
-                    Object.entries(summary.metadata.employeeTypes).forEach(([k, v]) => renderItem(k, v));
-                    Object.entries(summary.metadata.coes).forEach(([k, v]) => renderItem(`${k} (COE)`, v));
-                    Object.entries(summary.metadata.scrumTeams).forEach(([k, v]) => renderItem(`${k} (Scrum)`, v));
+                    Object.entries(summary.metadata.employeeTypes || {}).forEach(([k, v]) => renderItem(k, v));
+                    Object.entries(summary.metadata.coes || {}).forEach(([k, v]) => renderItem(`${k} (COE)`, v));
+                    Object.entries(summary.metadata.scrumTeams || {}).forEach(([k, v]) => renderItem(`${k} (Scrum)`, v));
+                    Object.entries(summary.metadata.regions || {}).forEach(([k, v]) => renderItem(k, v));
+                    Object.entries(summary.metadata.functions || {}).forEach(([k, v]) => renderItem(k, v));
+                    Object.entries(summary.metadata.subfunctions || {}).forEach(([k, v]) => renderItem(k, v));
                 }
             }
             else if (node.type === 'text') {
