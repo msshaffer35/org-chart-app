@@ -5,9 +5,10 @@ const PX_TO_INCH = 1 / 96;
 
 /**
  * Exports the current nodes and edges to a PPTX file.
+ * Respects visibility (hidden nodes) and de-identification settings.
  * @param {Array} nodes - ReactFlow nodes
  * @param {Array} edges - ReactFlow edges
- * @param {Object} settings - App settings (for styling)
+ * @param {Object} settings - App settings (for styling and de-identification)
  */
 export const exportToPptx = async (nodes, edges, settings) => {
     console.log("Starting PPTX export...", { nodes, edges, settings });
@@ -17,14 +18,22 @@ export const exportToPptx = async (nodes, edges, settings) => {
 
         const slide = pres.addSlide();
 
-        // 1. Calculate Bounding Box of the Chart
-        if (nodes.length === 0) {
-            alert("No nodes to export.");
+        // --- 0. Filter Visible Nodes & Edges ---
+        // Only export nodes that are NOT hidden
+        const visibleNodes = nodes.filter(n => !n.hidden);
+
+        if (visibleNodes.length === 0) {
+            alert("No visible nodes to export.");
             return;
         }
 
+        // Only export edges where both source and target are visible
+        const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
+        const visibleEdges = edges.filter(e => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target));
+
+        // --- 1. Calculate Bounding Box of the Chart ---
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        nodes.forEach(node => {
+        visibleNodes.forEach(node => {
             const x = node.position.x;
             const y = node.position.y;
             const w = node.width || 256;
@@ -46,7 +55,7 @@ export const exportToPptx = async (nodes, edges, settings) => {
         const chartWidth = maxX - minX;
         const chartHeight = maxY - minY;
 
-        // 2. Calculate Scale to Fit Slide
+        // --- 2. Calculate Scale to Fit Slide ---
         const slideWidthPx = 10 * 96;
         const slideHeightPx = 5.625 * 96;
 
@@ -104,8 +113,8 @@ export const exportToPptx = async (nodes, edges, settings) => {
         // Store calculated layouts for edges
         const nodeLayouts = new Map();
 
-        // 3. Draw Nodes
-        nodes.forEach(node => {
+        // --- 3. Draw Nodes ---
+        visibleNodes.forEach(node => {
             const x = toInchX(node.position.x);
             const y = toInchY(node.position.y);
 
@@ -114,12 +123,34 @@ export const exportToPptx = async (nodes, edges, settings) => {
                 // Start with base height, but allow expansion
                 let h = toInchDim(node.height || 200);
 
+                // --- De-identification Logic ---
+                const { deidentifiedMode, deidentificationSettings } = settings;
+                let displayName = node.data.label || 'Name';
+                let displayRole = node.data.role || 'Role';
+                let displayDept = node.data.department || '';
+                let showImage = !!node.data.image;
+                let isDeidentified = false;
+
+                if (deidentifiedMode) {
+                    isDeidentified = true;
+                    displayName = "De-identified";
+                    showImage = false;
+
+                    // Apply mappings
+                    if (deidentificationSettings?.titleMappings && deidentificationSettings.titleMappings[node.data.role]) {
+                        displayRole = deidentificationSettings.titleMappings[node.data.role];
+                    }
+                    if (deidentificationSettings?.departmentMappings && deidentificationSettings.departmentMappings[node.data.department]) {
+                        displayDept = deidentificationSettings.departmentMappings[node.data.department];
+                    }
+                }
+
                 const imgSize = toInchDim(48);
                 const textStartX = x + toInchDim(16);
                 let textOffsetX = 0;
                 const contentStartY = y + toInchDim(20);
 
-                if (node.data.image || !node.data.image) { // Always reserve space for avatar/placeholder
+                if (showImage || isDeidentified) { // Always reserve space if image was there or if de-identified (placeholder)
                     textOffsetX = imgSize + toInchDim(12);
                 }
 
@@ -131,18 +162,18 @@ export const exportToPptx = async (nodes, edges, settings) => {
 
                 // Name
                 const nameSize = scaleFontSize(14);
-                const nameHeight = estimateTextHeight(node.data.label || 'Name', nameSize, textWidth);
-                layoutItems.push({ type: 'text', text: node.data.label || 'Name', x: textStartX + textOffsetX, y: currentY, w: textWidth, h: nameHeight, fontSize: nameSize, bold: true, color: '1F2937' });
+                const nameHeight = estimateTextHeight(displayName, nameSize, textWidth);
+                layoutItems.push({ type: 'text', text: displayName, x: textStartX + textOffsetX, y: currentY, w: textWidth, h: nameHeight, fontSize: nameSize, bold: true, color: '1F2937' });
                 currentY += nameHeight + toInchDim(4);
 
                 // Role
                 const roleSize = scaleFontSize(12);
-                const roleHeight = estimateTextHeight(node.data.role || 'Role', roleSize, textWidth);
-                layoutItems.push({ type: 'text', text: node.data.role || 'Role', x: textStartX + textOffsetX, y: currentY, w: textWidth, h: roleHeight, fontSize: roleSize, color: '6B7280' });
+                const roleHeight = estimateTextHeight(displayRole, roleSize, textWidth);
+                layoutItems.push({ type: 'text', text: displayRole, x: textStartX + textOffsetX, y: currentY, w: textWidth, h: roleHeight, fontSize: roleSize, color: '6B7280' });
                 currentY += roleHeight + toInchDim(4);
 
-                // Overlay Fields
-                if (node.data.overlayFields && node.data.overlayFields.length > 0) {
+                // Overlay Fields (Only if NOT de-identified)
+                if (!isDeidentified && node.data.overlayFields && node.data.overlayFields.length > 0) {
                     currentY += toInchDim(4);
                     const fieldSize = scaleFontSize(10);
                     node.data.overlayFields.forEach(field => {
@@ -166,18 +197,32 @@ export const exportToPptx = async (nodes, edges, settings) => {
 
                 // Department (at bottom or pushed down)
                 const deptSize = scaleFontSize(10);
-                const deptHeight = estimateTextHeight(node.data.department, deptSize, w - toInchDim(32));
+                const deptHeight = estimateTextHeight(displayDept, deptSize, w - toInchDim(32));
                 currentY += toInchDim(10); // Padding before dept
 
                 // Check if we need to expand the node
-                const contentBottom = currentY + deptHeight + toInchDim(10);
+                let contentBottom = currentY + deptHeight + toInchDim(10);
+
+                // Check for Summary Card (De-identified mode)
+                const summary = node.data._deidSummary;
+                let summaryHeight = 0;
+                if (summary && summary.count > 0) {
+                    // Estimate summary height
+                    // Header + 1 line per item
+                    const itemCount = Object.keys(summary.metadata.employeeTypes).length +
+                        Object.keys(summary.metadata.coes).length +
+                        Object.keys(summary.metadata.scrumTeams).length;
+                    summaryHeight = toInchDim(20) + (itemCount * toInchDim(12));
+                    contentBottom += summaryHeight + toInchDim(10);
+                }
+
                 if (contentBottom > y + h) {
                     h = contentBottom - y;
                 }
 
-                // Department Y position (align bottom of expanded node)
-                const deptY = y + h - deptHeight - toInchDim(10);
-                layoutItems.push({ type: 'text', text: node.data.department, x: x + toInchDim(16), y: deptY, w: w - toInchDim(32), h: deptHeight, fontSize: deptSize, color: '9CA3AF' });
+                // Department Y position (align bottom of expanded node, above summary if present)
+                const deptY = y + h - deptHeight - toInchDim(10) - summaryHeight - (summaryHeight > 0 ? toInchDim(10) : 0);
+                layoutItems.push({ type: 'text', text: displayDept, x: x + toInchDim(16), y: deptY, w: w - toInchDim(32), h: deptHeight, fontSize: deptSize, color: '9CA3AF' });
 
                 // Store layout for edges
                 nodeLayouts.set(node.id, { x, y, w, h });
@@ -207,7 +252,7 @@ export const exportToPptx = async (nodes, edges, settings) => {
                 });
 
                 // Avatar / Icon
-                if (node.data.image) {
+                if (showImage) {
                     slide.addImage({
                         path: node.data.image,
                         x: textStartX,
@@ -217,6 +262,7 @@ export const exportToPptx = async (nodes, edges, settings) => {
                         rounding: true
                     });
                 } else {
+                    // Placeholder
                     slide.addShape(pres.ShapeType.ellipse, {
                         x: textStartX,
                         y: contentStartY,
@@ -246,6 +292,46 @@ export const exportToPptx = async (nodes, edges, settings) => {
                         });
                     }
                 });
+
+                // Draw Summary Card
+                if (summary && summary.count > 0) {
+                    const summaryY = y + h - summaryHeight - toInchDim(5);
+                    const summaryW = w - toInchDim(16);
+                    const summaryX = x + toInchDim(8);
+
+                    // Background for summary
+                    slide.addShape(pres.ShapeType.rect, {
+                        x: summaryX, y: summaryY, w: summaryW, h: summaryHeight,
+                        fill: { color: 'F9FAFB' }, // gray-50
+                        line: { color: 'E5E7EB', width: 0.5 * scale }
+                    });
+
+                    // Header
+                    slide.addText(`+ ${summary.count} Descendants`, {
+                        x: summaryX + toInchDim(4), y: summaryY + toInchDim(4), w: summaryW - toInchDim(8), h: toInchDim(12),
+                        fontFace: 'Arial', fontSize: scaleFontSize(10), bold: true, color: '374151'
+                    });
+
+                    // Items
+                    let itemY = summaryY + toInchDim(16);
+                    const itemH = toInchDim(10);
+                    const itemFontSize = scaleFontSize(9);
+
+                    const renderItem = (label, count) => {
+                        slide.addText([
+                            { text: label, options: { color: '6B7280' } },
+                            { text: ` ${count}`, options: { bold: true, color: '374151' } }
+                        ], {
+                            x: summaryX + toInchDim(4), y: itemY, w: summaryW - toInchDim(8), h: itemH,
+                            fontFace: 'Arial', fontSize: itemFontSize, align: 'left'
+                        });
+                        itemY += itemH;
+                    };
+
+                    Object.entries(summary.metadata.employeeTypes).forEach(([k, v]) => renderItem(k, v));
+                    Object.entries(summary.metadata.coes).forEach(([k, v]) => renderItem(`${k} (COE)`, v));
+                    Object.entries(summary.metadata.scrumTeams).forEach(([k, v]) => renderItem(`${k} (Scrum)`, v));
+                }
             }
             else if (node.type === 'text') {
                 const w = toInchDim(node.width || 150);
@@ -268,10 +354,10 @@ export const exportToPptx = async (nodes, edges, settings) => {
             }
         });
 
-        // 4. Draw Connectors
-        edges.forEach(edge => {
-            const sourceNode = nodes.find(n => n.id === edge.source);
-            const targetNode = nodes.find(n => n.id === edge.target);
+        // --- 4. Draw Connectors ---
+        visibleEdges.forEach(edge => {
+            const sourceNode = visibleNodes.find(n => n.id === edge.source);
+            const targetNode = visibleNodes.find(n => n.id === edge.target);
 
             if (!sourceNode || !targetNode) return;
 
@@ -336,7 +422,7 @@ export const exportToPptx = async (nodes, edges, settings) => {
             }
         });
 
-        // 5. Save
+        // --- 5. Save ---
         console.log("Writing PPTX file...");
         await pres.writeFile({ fileName: `OrgChart_${new Date().toISOString().slice(0, 10)}.pptx` });
         console.log("PPTX export complete.");
