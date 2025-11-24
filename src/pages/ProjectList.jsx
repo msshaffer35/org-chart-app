@@ -697,47 +697,50 @@ const ProjectList = () => {
                                                     {project.children.length} Scenario{project.children.length !== 1 ? 's' : ''}
                                                 </div>
                                             )}
-                                        </div>
 
-                                        {/* Nested Scenarios */}
-                                        {expandedProjects[project.id] && project.children && project.children.map(scenario => (
-                                            <div
-                                                key={scenario.id}
-                                                onClick={() => navigate(`/compare/${project.id}/${scenario.id}`)}
-                                                className="ml-8 bg-slate-50 rounded-xl border border-slate-200 border-l-4 border-l-purple-400 shadow-sm hover:shadow-md transition-all cursor-pointer p-4 flex flex-col relative group"
-                                            >
-                                                <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-slate-300">
-                                                    <CornerDownRight size={20} />
-                                                </div>
-
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Scenario</span>
-                                                            <h4 className="font-medium text-slate-900">{scenario.versionName || 'Untitled Scenario'}</h4>
-                                                        </div>
-                                                        <p className="text-xs text-slate-500">Derived from {project.account}</p>
-                                                    </div>
-
-                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={(e) => handleDelete(e, scenario.id)}
-                                                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
-                                                            title="Delete scenario"
+                                            {/* Nested Scenarios (Inside Card) */}
+                                            {expandedProjects[project.id] && project.children && (
+                                                <div className="border-t border-slate-100 bg-slate-50/50">
+                                                    {project.children.map(scenario => (
+                                                        <div
+                                                            key={scenario.id}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/compare/${project.id}/${scenario.id}`);
+                                                            }}
+                                                            className="px-5 py-3 hover:bg-slate-100 transition-colors flex items-center justify-between group/scenario cursor-pointer border-l-4 border-l-transparent hover:border-l-purple-300 relative"
                                                         >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                            {/* Indentation Visual */}
+                                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover/scenario:bg-purple-300 transition-colors"></div>
 
-                                                <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center">
-                                                    <span className="text-[10px] text-slate-400">Created: {formatDate(scenario.dateCollected)}</span>
-                                                    <span className="text-xs font-medium text-blue-600 flex items-center gap-1 group-hover:underline">
-                                                        Resume Analysis <ChevronRight size={12} />
-                                                    </span>
+                                                            <div className="flex-1 min-w-0 pl-2">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider flex-none">Scenario</span>
+                                                                    <h4 className="font-medium text-slate-900 truncate text-sm">{scenario.versionName || 'Untitled Scenario'}</h4>
+                                                                </div>
+                                                                <div className="flex items-center text-xs text-slate-400 gap-2 pl-1">
+                                                                    <Calendar size={10} />
+                                                                    <span>{formatDate(scenario.dateCollected)}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex gap-1 opacity-0 group-hover/scenario:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={(e) => handleDelete(e, scenario.id)}
+                                                                    className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                                                                    title="Delete scenario"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                                <div className="text-purple-600 flex items-center text-xs font-medium ml-1">
+                                                                    <ChevronRight size={14} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )}
+                                        </div>
                                     </React.Fragment>
                                 ))}
                             </div>
