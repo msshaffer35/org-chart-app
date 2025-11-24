@@ -27,6 +27,10 @@ A modern, interactive organization chart builder built with React, Vite, and Rea
     -   **Detailed Attributes**:
         -   **Role / Remit**: Add detailed descriptions of an individual's responsibilities.
         -   **Comments / Notes**: Capture additional context or notes for any employee.
+-   **Privacy & Standardization**:
+    -   **De-identification Mode**: Toggle to hide sensitive information (names, images) for sharing.
+    -   **Level Limiting**: Restrict the depth of the org chart displayed.
+    -   **Standardization**: Map custom titles and departments to standard values for analysis.
 
 ## Tech Stack
 
