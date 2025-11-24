@@ -6,6 +6,7 @@ import {
 } from 'reactflow';
 import { storageService } from '../services/storageService';
 import { getLayoutedElements } from '../utils/layout';
+import { calculateNodeDepths, getDescendantSummary } from '../utils/graphUtils';
 
 // Debounce helper
 const debounce = (func, wait) => {
@@ -86,6 +87,13 @@ const useStore = create((set, get) => ({
             image: true,
         },
         formattingRules: [], // { id, field, operator, value, color }
+        deidentifiedMode: false,
+        deidentificationSettings: {
+            enabled: false,
+            maxLevels: 2, // Default to showing top 2 levels
+            titleMappings: {}, // { "Original Title": "Standard Title" }
+            departmentMappings: {}, // { "Original Dept": "Standard Dept" }
+        },
     },
 
     onNodesChange: (changes) => {
@@ -387,15 +395,14 @@ const useStore = create((set, get) => ({
     },
 
     applyFilter: () => {
-        const { nodes, edges, filterState } = get();
+        const { nodes, edges, filterState, settings } = get();
         let newNodes = [...nodes];
 
-        if (filterState.type === 'NONE') {
-            newNodes = newNodes.map(n => ({ ...n, hidden: false }));
-        } else if (filterState.type === 'SUBTREE') {
-            const rootId = filterState.value;
+        // 1. Base Visibility (Filter Panel)
+        let visibleIds = new Set(newNodes.map(n => n.id));
 
-            // Find descendants
+        if (filterState.type === 'SUBTREE') {
+            const rootId = filterState.value;
             const getDescendants = (id) => {
                 const children = edges.filter(e => e.source === id).map(e => e.target);
                 let descendants = [...children];
@@ -404,24 +411,13 @@ const useStore = create((set, get) => ({
                 });
                 return descendants;
             };
-
-            const visibleIds = new Set([rootId, ...getDescendants(rootId)]);
-            newNodes = newNodes.map(n => ({
-                ...n,
-                hidden: !visibleIds.has(n.id)
-            }));
-
+            visibleIds = new Set([rootId, ...getDescendants(rootId)]);
         } else if (filterState.type === 'CRITERIA') {
-            const { field, value } = filterState.value; // e.g. { field: 'department', value: 'Engineering' }
+            const { field, value } = filterState.value;
 
-            // 1. Find matching nodes
             const matchingNodes = nodes.filter(n => {
                 if (!n.data) return false;
-                // Handle nested fields if necessary, but for now simple top-level data fields
-                // Special case for teamType arrays
                 if (field === 'scrum' || field === 'coe' || field === 'region' || field === 'function' || field === 'subFunction') {
-                    // These are inside teamType usually, or we need to check how they are stored.
-                    // Based on debouncedSave, they seem to be in node.data.teamType
                     if (!n.data.teamType) return false;
                     if (field === 'scrum') return n.data.teamType.scrum === value;
                     if (field === 'coe') return n.data.teamType.coe === value;
@@ -429,16 +425,13 @@ const useStore = create((set, get) => ({
                     if (field === 'function') return n.data.teamType.functions?.includes(value);
                     if (field === 'subFunction') return n.data.teamType.subFunctions?.includes(value);
                 }
-
-                // Standard fields
                 return n.data[field] === value;
             });
 
             const matchingIds = new Set(matchingNodes.map(n => n.id));
-            const visibleIds = new Set(matchingIds);
+            visibleIds = new Set(matchingIds); // Start with matches
 
-            // 2. Find ancestors for each matching node
-            // Build parent map for easier traversal
+            // Add ancestors
             const parentMap = {};
             edges.forEach(e => {
                 parentMap[e.target] = e.source;
@@ -451,18 +444,69 @@ const useStore = create((set, get) => ({
                     visibleIds.add(curr);
                 }
             });
-
-            newNodes = newNodes.map(n => ({
-                ...n,
-                hidden: !visibleIds.has(n.id)
-            }));
         }
+
+        // 2. De-identification Level Filtering
+        if (settings.deidentifiedMode && settings.deidentificationSettings.maxLevels > 0) {
+            const depths = calculateNodeDepths(nodes, edges);
+            const maxDepth = settings.deidentificationSettings.maxLevels - 1; // 0-indexed depth
+
+            // Filter out nodes deeper than maxDepth
+            // BUT, we need to keep track of them for aggregation on the boundary nodes
+
+            // First, mark nodes as hidden if they exceed depth
+            // We intersect with existing visibleIds
+            const levelVisibleIds = new Set();
+
+            nodes.forEach(node => {
+                if (depths[node.id] <= maxDepth) {
+                    levelVisibleIds.add(node.id);
+                }
+            });
+
+            // Intersect
+            visibleIds = new Set([...visibleIds].filter(x => levelVisibleIds.has(x)));
+
+            // Calculate Aggregations for Boundary Nodes (nodes at maxDepth or leaf of visibility)
+            newNodes = newNodes.map(node => {
+                const depth = depths[node.id];
+                const isBoundary = depth === maxDepth;
+
+                if (isBoundary && visibleIds.has(node.id)) {
+                    // Calculate hidden descendants
+                    const summary = getDescendantSummary(node.id, edges, nodes);
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            _deidSummary: summary // Inject summary into data
+                        }
+                    };
+                } else {
+                    // Clear summary if not boundary
+                    const { _deidSummary, ...restData } = node.data;
+                    return { ...node, data: restData };
+                }
+            });
+        } else {
+            // Clear summaries if mode disabled
+            newNodes = newNodes.map(node => {
+                if (node.data._deidSummary) {
+                    const { _deidSummary, ...restData } = node.data;
+                    return { ...node, data: restData };
+                }
+                return node;
+            });
+        }
+
+        // Apply Final Visibility
+        newNodes = newNodes.map(n => ({
+            ...n,
+            hidden: !visibleIds.has(n.id)
+        }));
 
         set({ nodes: newNodes });
 
-        // Re-layout only if we are filtering (or clearing)
-        // We need to wait for state update? No, we just updated it.
-        // But layoutNodes reads from get().nodes which is now updated.
         setTimeout(() => {
             get().layoutNodes();
         }, 0);
