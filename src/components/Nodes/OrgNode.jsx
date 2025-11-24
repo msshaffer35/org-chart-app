@@ -1,11 +1,13 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { User, Briefcase, Building, Plus } from 'lucide-react';
+import { User, Briefcase, Building, Plus, Search } from 'lucide-react';
 import useStore from '../../store/useStore';
+// ...
 
 const OrgNode = ({ id, data, selected }) => {
     const updateNodeData = useStore((state) => state.updateNodeData);
     const addReport = useStore((state) => state.addReport);
+    const setFilter = useStore((state) => state.setFilter);
 
     const [isEditingName, setIsEditingName] = React.useState(false);
     const [isEditingRole, setIsEditingRole] = React.useState(false);
@@ -71,7 +73,25 @@ const OrgNode = ({ id, data, selected }) => {
             {/* Header / Color Strip */}
             <div className={`h-2 w-full rounded-t-lg ${effectiveColor}`} />
 
+            {/* Focus Button (Top Right) */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setFilter('SUBTREE', id);
+                }}
+                className="
+                    absolute top-3 right-3
+                    p-1.5 rounded-full bg-white text-gray-500 hover:text-blue-600 hover:bg-blue-50
+                    opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm border border-gray-100
+                "
+                title="Focus on this team"
+            >
+                <Search size={14} />
+            </button>
+
             <div className="p-4">
+                {/* ... (existing content) */}
+
                 <div className="flex items-center space-x-3 mb-3">
                     {/* Avatar */}
                     {visibleFields.image && (

@@ -371,9 +371,106 @@ const useStore = create((set, get) => ({
         }
     },
 
+    filterState: {
+        type: 'NONE', // 'NONE', 'SUBTREE', 'CRITERIA'
+        value: null
+    },
+
+    setFilter: (type, value) => {
+        set({ filterState: { type, value } });
+        get().applyFilter();
+    },
+
+    clearFilter: () => {
+        set({ filterState: { type: 'NONE', value: null } });
+        get().applyFilter();
+    },
+
+    applyFilter: () => {
+        const { nodes, edges, filterState } = get();
+        let newNodes = [...nodes];
+
+        if (filterState.type === 'NONE') {
+            newNodes = newNodes.map(n => ({ ...n, hidden: false }));
+        } else if (filterState.type === 'SUBTREE') {
+            const rootId = filterState.value;
+
+            // Find descendants
+            const getDescendants = (id) => {
+                const children = edges.filter(e => e.source === id).map(e => e.target);
+                let descendants = [...children];
+                children.forEach(child => {
+                    descendants = [...descendants, ...getDescendants(child)];
+                });
+                return descendants;
+            };
+
+            const visibleIds = new Set([rootId, ...getDescendants(rootId)]);
+            newNodes = newNodes.map(n => ({
+                ...n,
+                hidden: !visibleIds.has(n.id)
+            }));
+
+        } else if (filterState.type === 'CRITERIA') {
+            const { field, value } = filterState.value; // e.g. { field: 'department', value: 'Engineering' }
+
+            // 1. Find matching nodes
+            const matchingNodes = nodes.filter(n => {
+                if (!n.data) return false;
+                // Handle nested fields if necessary, but for now simple top-level data fields
+                // Special case for teamType arrays
+                if (field === 'scrum' || field === 'coe' || field === 'region' || field === 'function' || field === 'subFunction') {
+                    // These are inside teamType usually, or we need to check how they are stored.
+                    // Based on debouncedSave, they seem to be in node.data.teamType
+                    if (!n.data.teamType) return false;
+                    if (field === 'scrum') return n.data.teamType.scrum === value;
+                    if (field === 'coe') return n.data.teamType.coe === value;
+                    if (field === 'region') return n.data.teamType.regions?.includes(value);
+                    if (field === 'function') return n.data.teamType.functions?.includes(value);
+                    if (field === 'subFunction') return n.data.teamType.subFunctions?.includes(value);
+                }
+
+                // Standard fields
+                return n.data[field] === value;
+            });
+
+            const matchingIds = new Set(matchingNodes.map(n => n.id));
+            const visibleIds = new Set(matchingIds);
+
+            // 2. Find ancestors for each matching node
+            // Build parent map for easier traversal
+            const parentMap = {};
+            edges.forEach(e => {
+                parentMap[e.target] = e.source;
+            });
+
+            matchingNodes.forEach(node => {
+                let curr = node.id;
+                while (parentMap[curr]) {
+                    curr = parentMap[curr];
+                    visibleIds.add(curr);
+                }
+            });
+
+            newNodes = newNodes.map(n => ({
+                ...n,
+                hidden: !visibleIds.has(n.id)
+            }));
+        }
+
+        set({ nodes: newNodes });
+
+        // Re-layout only if we are filtering (or clearing)
+        // We need to wait for state update? No, we just updated it.
+        // But layoutNodes reads from get().nodes which is now updated.
+        setTimeout(() => {
+            get().layoutNodes();
+        }, 0);
+    },
+
     resetChart: async () => {
         // Only clear current state, don't delete persistence unless explicitly requested
-        set({ nodes: [], edges: [] });
+        set({ nodes: [], edges: [], filterState: { type: 'NONE', value: null } });
     }
 }));
 

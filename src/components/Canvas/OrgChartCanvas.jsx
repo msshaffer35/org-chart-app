@@ -13,6 +13,7 @@ import { getLayoutedElements } from '../../utils/layout';
 import { parseCSV } from '../../utils/csvImporter';
 import { exportToPptx } from '../../services/pptxExportService';
 import { Download } from 'lucide-react';
+import FilterPanel from './FilterPanel';
 
 const nodeTypes = {
     org: OrgNode,
@@ -183,6 +184,10 @@ const OrgChartCanvas = () => {
                     if (n.type === 'org') return '#3b82f6';
                     return '#eee';
                 }} />
+
+                <Panel position="top-left">
+                    <FilterPanel />
+                </Panel>
 
                 <Panel position="top-right" className="bg-white p-2 rounded shadow-md flex gap-2">
                     <button
