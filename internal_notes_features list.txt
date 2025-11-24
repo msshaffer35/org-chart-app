@@ -4,8 +4,6 @@ Name Box features:
 - Headcount time allocation by function per person box
 
 Main Panel features:
-- For large org charts need a feature that allows you to zoom in or only see a subsection of the organization. For instance if 200 people in organization I may want to look at L1 team specifically to review that org without all the other clutter (maybe this is a filter on "department" or "person name" explained below)
-- Need to add button that allows filtering by overlay buttons to only show the org parts based on certain characteristic (e.g. filter US and show only those boxes with direct reports above to understand structure)
 
 
 New Analyze page that: 

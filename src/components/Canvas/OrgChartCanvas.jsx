@@ -13,6 +13,8 @@ import { getLayoutedElements } from '../../utils/layout';
 import { parseCSV } from '../../utils/csvImporter';
 import { exportToPptx } from '../../services/pptxExportService';
 import { Download } from 'lucide-react';
+import FilterPanel from './FilterPanel';
+import DeidentificationControls from '../DeidentificationControls';
 
 const nodeTypes = {
     org: OrgNode,
@@ -183,6 +185,13 @@ const OrgChartCanvas = () => {
                     if (n.type === 'org') return '#3b82f6';
                     return '#eee';
                 }} />
+
+                <Panel position="top-left">
+                    <div className="flex flex-col gap-2">
+                        <FilterPanel />
+                        <DeidentificationControls />
+                    </div>
+                </Panel>
 
                 <Panel position="top-right" className="bg-white p-2 rounded shadow-md flex gap-2">
                     <button
