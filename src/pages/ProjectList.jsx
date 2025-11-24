@@ -8,8 +8,9 @@ import AccountCard from '../components/AccountCard';
 
 const ProjectList = () => {
     const navigate = useNavigate();
-    const { projectList, loadProjects, createProject, updateProject, deleteProject } = useStore();
+    const { projectList, loadProjects, createProject, createScenario, updateProject, deleteProject } = useStore();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
     const [showModal, setShowModal] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -259,8 +260,9 @@ const ProjectList = () => {
                 await updateProject(editingProject.id, formData);
             } else {
                 const id = await createProject(formData);
-                navigate(`/editor/${id}`);
+                navigate(`/project/${id}`);
             }
+
             setShowModal(false);
         } catch (error) {
             console.error("Failed to save project", error);
@@ -275,6 +277,25 @@ const ProjectList = () => {
             await deleteProject(id);
         }
     };
+
+    const handleCreateScenario = async (e, project) => {
+        e.stopPropagation();
+        const name = prompt("Enter a name for this scenario (e.g. 'Jan 2025 Plan'):");
+        if (!name) return;
+
+        try {
+            const newId = await createScenario(project.id, {
+                versionName: name,
+                account: project.account,
+                department: project.department
+            });
+            navigate(`/compare/${project.id}/${newId}`);
+        } catch (error) {
+            console.error("Failed to create scenario", error);
+            alert("Failed to create scenario");
+        }
+    };
+
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
@@ -548,9 +569,10 @@ const ProjectList = () => {
                                 {filteredProjects.map((project) => (
                                     <div
                                         key={project.id}
-                                        onClick={() => navigate(`/editor/${project.id}`)}
+                                        onClick={() => navigate(`/project/${project.id}`)}
                                         className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
                                     >
+
                                         <div className="h-24 bg-slate-100 flex items-center justify-center border-b border-slate-100 group-hover:bg-slate-50 transition-colors relative">
                                             <Building2 className="text-slate-300 group-hover:text-blue-400 transition-colors" size={40} />
                                             {/* Tag Badges Overlay */}
@@ -589,6 +611,14 @@ const ProjectList = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-1">
+
+                                                    <button
+                                                        onClick={(e) => handleCreateScenario(e, project)}
+                                                        className="text-slate-400 hover:text-green-500 transition-colors p-1 rounded-md hover:bg-green-50"
+                                                        title="Create Scenario / Future Version"
+                                                    >
+                                                        <Target size={18} />
+                                                    </button>
                                                     <button
                                                         onClick={(e) => openEditModal(e, project)}
                                                         className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50"
@@ -604,6 +634,7 @@ const ProjectList = () => {
                                                         <Trash2 size={18} />
                                                     </button>
                                                 </div>
+
                                             </div>
 
                                             <div className="mt-auto pt-4 border-t border-slate-100 space-y-1">
@@ -697,7 +728,7 @@ const ProjectList = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

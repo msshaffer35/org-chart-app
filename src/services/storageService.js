@@ -100,6 +100,7 @@ export const storageService = {
             const projects = storageService.getProjects();
             const newProject = {
                 id: crypto.randomUUID(),
+                type: 'ACTUAL', // Default type
                 ...metadata, // { account, department, dateCollected }
                 lastModified: Date.now(),
             };
@@ -111,6 +112,51 @@ export const storageService = {
             return Promise.reject(error);
         }
     },
+
+    createScenario: async (sourceProjectId, metadata) => {
+        try {
+            // 1. Get Source Data
+            const sourceProject = storageService.getProjectMetadata(sourceProjectId);
+            const sourceData = await storageService.loadProject(sourceProjectId);
+
+            if (!sourceProject || !sourceData) {
+                throw new Error("Source project not found");
+            }
+
+            // 2. Create New Project Entry
+            const projects = storageService.getProjects();
+            const newId = crypto.randomUUID();
+
+            const newProject = {
+                id: newId,
+                type: 'SCENARIO',
+                sourceProjectId: sourceProjectId,
+                ...metadata, // { versionName, account, department... }
+                account: sourceProject.account, // Inherit account
+                department: sourceProject.department, // Inherit dept
+                lastModified: Date.now(),
+                analysis: {
+                    swot: { strengths: [], weaknesses: [], opportunities: [], threats: [] },
+                    generalNotes: "",
+                    strategicAlignment: ""
+                }
+            };
+
+            projects.push(newProject);
+            localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+
+            // 3. Clone Data
+            // Deep copy nodes and edges to ensure independence
+            const clonedData = JSON.parse(JSON.stringify(sourceData));
+            localStorage.setItem(`${PROJECT_PREFIX}${newId}`, JSON.stringify(clonedData));
+
+            return newId;
+        } catch (error) {
+            console.error('Failed to create scenario:', error);
+            return Promise.reject(error);
+        }
+    },
+
 
     deleteProject: (id) => {
         try {
