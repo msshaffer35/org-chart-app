@@ -101,11 +101,15 @@ export const getDescendantSummary = (nodeId, edges, nodes) => {
 
                     // Aggregate Functions and Subfunctions
                     // Assuming these are direct properties on data, or we can check overlayFields if they are dynamic
-                    if (childNode.data.function) {
-                        summary.metadata.functions[childNode.data.function] = (summary.metadata.functions[childNode.data.function] || 0) + 1;
+                    if (Array.isArray(teamType.functions)) {
+                        teamType.functions.forEach(f => {
+                            summary.metadata.functions[f] = (summary.metadata.functions[f] || 0) + 1;
+                        });
                     }
-                    if (childNode.data.subfunction) {
-                        summary.metadata.subfunctions[childNode.data.subfunction] = (summary.metadata.subfunctions[childNode.data.subfunction] || 0) + 1;
+                    if (Array.isArray(teamType.subFunctions)) {
+                        teamType.subFunctions.forEach(sf => {
+                            summary.metadata.subfunctions[sf] = (summary.metadata.subfunctions[sf] || 0) + 1;
+                        });
                     }
                 }
 
