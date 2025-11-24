@@ -4,6 +4,7 @@ import useStore from '../../store/useStore';
 
 const RightPanel = () => {
     const nodes = useStore((state) => state.nodes);
+    const edges = useStore((state) => state.edges);
     const settings = useStore((state) => state.settings);
     const updateSettings = useStore((state) => state.updateSettings);
     const updateNodeData = useStore((state) => state.updateNodeData);
@@ -336,13 +337,19 @@ const RightPanel = () => {
                                     <div className="flex bg-gray-100 p-1 rounded-md">
                                         <button
                                             onClick={() => updateParentEdgeStyle(selectedNode.id, 'solid')}
-                                            className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all bg-white shadow text-gray-800 hover:bg-gray-50"
+                                            className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-all ${!edges.find(e => e.target === selectedNode.id)?.style?.strokeDasharray
+                                                ? 'bg-white shadow text-gray-800'
+                                                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                                }`}
                                         >
                                             Solid
                                         </button>
                                         <button
                                             onClick={() => updateParentEdgeStyle(selectedNode.id, 'dotted')}
-                                            className="flex-1 py-1.5 text-xs font-medium rounded-sm transition-all text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                                            className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-all ${edges.find(e => e.target === selectedNode.id)?.style?.strokeDasharray === '5,5'
+                                                ? 'bg-white shadow text-gray-800'
+                                                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                                }`}
                                         >
                                             Dotted
                                         </button>
