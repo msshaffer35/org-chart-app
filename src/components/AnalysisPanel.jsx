@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X } from 'lucide-react';
+import { Save, X, Check } from 'lucide-react';
 import useStore from '../store/useStore';
 
 const AnalysisPanel = ({ projectId, initialData, onClose }) => {
@@ -13,6 +13,8 @@ const AnalysisPanel = ({ projectId, initialData, onClose }) => {
         ...initialData
     });
     const [isSaving, setIsSaving] = useState(false);
+
+    const [isSaved, setIsSaved] = useState(false);
 
     // Ensure nested objects exist
     useEffect(() => {
@@ -30,6 +32,8 @@ const AnalysisPanel = ({ projectId, initialData, onClose }) => {
         try {
             // We are updating the project metadata with the 'analysis' field
             await updateProject(projectId, { analysis: data });
+            setIsSaved(true);
+            setTimeout(() => setIsSaved(false), 2000);
         } catch (error) {
             console.error("Failed to save analysis", error);
         } finally {
@@ -151,10 +155,10 @@ const AnalysisPanel = ({ projectId, initialData, onClose }) => {
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg transition-colors disabled:opacity-50 ${isSaved ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                 >
-                    <Save size={16} />
-                    {isSaving ? 'Saving...' : 'Save Analysis'}
+                    {isSaved ? <Check size={16} /> : <Save size={16} />}
+                    {isSaving ? 'Saving...' : (isSaved ? 'Saved!' : 'Save Analysis')}
                 </button>
             </div>
         </div>

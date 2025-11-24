@@ -352,6 +352,13 @@ const useStore = create((set, get) => ({
         try {
             await storageService.updateProjectMetadata(id, metadata);
             get().loadProjects();
+
+            // If we are currently viewing this project, update the currentProject state
+            const { currentProjectId } = get();
+            if (currentProjectId === id) {
+                const updatedMeta = storageService.getProjectMetadata(id);
+                set({ currentProject: updatedMeta });
+            }
         } catch (error) {
             console.error(error);
         }
