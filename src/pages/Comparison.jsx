@@ -106,69 +106,71 @@ const Comparison = () => {
 
     return (
         <MainLayout>
-            {/* Header */}
-            <div className="h-14 bg-white border-b border-slate-200 flex items-center px-4 justify-between shadow-sm z-20">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/')} className="text-slate-500 hover:text-slate-800">
-                        <ArrowLeft size={20} />
+            <div className="flex flex-col h-full w-full">
+                {/* Header */}
+                <div className="h-14 bg-white border-b border-slate-200 flex items-center px-4 justify-between shadow-sm z-20 flex-none">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navigate('/')} className="text-slate-500 hover:text-slate-800">
+                            <ArrowLeft size={20} />
+                        </button>
+                        <h1 className="font-semibold text-slate-800">Comparison Mode</h1>
+
+                        <div className="flex gap-3 text-xs font-medium px-4 border-l border-slate-200">
+                            <span className="text-green-600 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                {diffStats.added} Added
+                            </span>
+                            <span className="text-red-600 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                {diffStats.removed} Removed
+                            </span>
+                            <span className="text-orange-600 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                                {diffStats.modified} Modified
+                            </span>
+                            <span className="text-blue-600 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                {diffStats.moved} Moved
+                            </span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setShowAnalysis(!showAnalysis)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium ${showAnalysis ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    >
+                        <FileText size={16} />
+                        Analysis
                     </button>
-                    <h1 className="font-semibold text-slate-800">Comparison Mode</h1>
-
-                    <div className="flex gap-3 text-xs font-medium px-4 border-l border-slate-200">
-                        <span className="text-green-600 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            {diffStats.added} Added
-                        </span>
-                        <span className="text-red-600 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                            {diffStats.removed} Removed
-                        </span>
-                        <span className="text-orange-600 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                            {diffStats.modified} Modified
-                        </span>
-                        <span className="text-blue-600 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                            {diffStats.moved} Moved
-                        </span>
-                    </div>
                 </div>
 
-                <button
-                    onClick={() => setShowAnalysis(!showAnalysis)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium ${showAnalysis ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                    <FileText size={16} />
-                    Analysis
-                </button>
-            </div>
 
-
-            {/* Split View */}
-            <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-                {/* Left: Base (ReadOnly) */}
-                <div className="w-1/2 h-full relative">
-                    <ReactFlowProvider>
-                        <ReadOnlyCanvas nodes={baseData.nodes} edges={baseData.edges} />
-                    </ReactFlowProvider>
-                </div>
-
-                {/* Right: Target (Editable) */}
-                <div className="w-1/2 h-full relative border-l-4 border-slate-200">
-                    <OrgChartCanvas isComparison={true} />
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider pointer-events-none z-10">
-                        Scenario / Target
+                {/* Split View */}
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Left: Base (ReadOnly) */}
+                    <div className="w-1/2 h-full relative">
+                        <ReactFlowProvider>
+                            <ReadOnlyCanvas nodes={baseData.nodes} edges={baseData.edges} />
+                        </ReactFlowProvider>
                     </div>
 
-                    {showAnalysis && currentProject && (
-                        <AnalysisPanel
-                            projectId={targetId}
-                            initialData={currentProject.analysis}
-                            onClose={() => setShowAnalysis(false)}
-                        />
-                    )}
-                </div>
+                    {/* Right: Target (Editable) */}
+                    <div className="w-1/2 h-full relative border-l-4 border-slate-200">
+                        <OrgChartCanvas isComparison={true} />
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider pointer-events-none z-10">
+                            Scenario / Target
+                        </div>
 
+                        {showAnalysis && currentProject && (
+                            <AnalysisPanel
+                                projectId={targetId}
+                                initialData={currentProject.analysis}
+                                onClose={() => setShowAnalysis(false)}
+                            />
+                        )}
+                    </div>
+
+                </div>
             </div>
         </MainLayout>
     );
