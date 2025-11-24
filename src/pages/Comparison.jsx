@@ -145,7 +145,7 @@ const Comparison = () => {
 
 
             {/* Split View */}
-            <div className="flex h-[calc(100vh-3.5rem)]">
+            <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
                 {/* Left: Base (ReadOnly) */}
                 <div className="w-1/2 h-full relative">
                     <ReactFlowProvider>
@@ -155,10 +155,11 @@ const Comparison = () => {
 
                 {/* Right: Target (Editable) */}
                 <div className="w-1/2 h-full relative border-l-4 border-slate-200">
-                    <OrgChartCanvas />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider pointer-events-none z-10">
+                    <OrgChartCanvas isComparison={true} />
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider pointer-events-none z-10">
                         Scenario / Target
                     </div>
+
                     {showAnalysis && currentProject && (
                         <AnalysisPanel
                             projectId={targetId}
