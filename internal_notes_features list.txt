@@ -13,6 +13,7 @@ New Analyze page that:
 - Have a way to pull in multiple org charts to review at the same time for comparisons
 - Need a way to add in "analysis" commentary on the organization of ways of working, pro/cons of current org structure, considerations for future
 - Need way to have "industry standard" org charts that are high level ideas of what current industry looks like so you can compare how similar or different the org chart is
+- Create a "New Analysis" button that allows you to compare different org charts or start without the "Base" for difference comparison
 
 
 Data storage layer:

@@ -67,38 +67,74 @@ const AccountCard = ({ accountName, projects, onCreateNew }) => {
             {/* Body - Project List */}
             {isExpanded && (
                 <div className="divide-y divide-slate-100">
-                    {sortedProjects.map((project) => (
-                        <div
-                            key={project.id}
-                            className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer"
-                            onClick={() => navigate(`/editor/${project.id}`)}
-                        >
-                            <div className="flex-1 min-w-0 pr-4">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium text-slate-700 text-sm">
-                                        {project.department || 'No Department'}
-                                    </span>
-                                    {/* Tag Badges (Mini) */}
-                                    <div className="flex gap-1">
-                                        {project.functions && project.functions.slice(0, 2).map(f => (
-                                            <span key={f} className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded border border-slate-200">{f}</span>
-                                        ))}
-                                        {project.coes && project.coes.length > 0 && (
-                                            <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[10px] rounded border border-purple-100">COE</span>
-                                        )}
+                    {sortedProjects.filter(p => p.type !== 'SCENARIO').map((project) => {
+                        // Find scenarios for this project
+                        const scenarios = sortedProjects.filter(s => s.type === 'SCENARIO' && s.sourceProjectId === project.id);
+
+                        return (
+                            <React.Fragment key={project.id}>
+                                {/* Parent Project Row */}
+                                <div
+                                    className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer"
+                                    onClick={() => navigate(`/editor/${project.id}`)}
+                                >
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-medium text-slate-700 text-sm">
+                                                {project.department || 'No Department'}
+                                            </span>
+                                            {/* Tag Badges (Mini) */}
+                                            <div className="flex gap-1">
+                                                {project.functions && project.functions.slice(0, 2).map(f => (
+                                                    <span key={f} className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded border border-slate-200">{f}</span>
+                                                ))}
+                                                {project.coes && project.coes.length > 0 && (
+                                                    <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[10px] rounded border border-purple-100">COE</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center text-xs text-slate-400 gap-2">
+                                            <Calendar size={12} />
+                                            <span>{formatDate(project.dateCollected)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                                        View <ArrowRight size={14} className="ml-1" />
                                     </div>
                                 </div>
-                                <div className="flex items-center text-xs text-slate-400 gap-2">
-                                    <Calendar size={12} />
-                                    <span>{formatDate(project.dateCollected)}</span>
-                                </div>
-                            </div>
 
-                            <div className="flex items-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
-                                View <ArrowRight size={14} className="ml-1" />
-                            </div>
-                        </div>
-                    ))}
+                                {/* Nested Scenarios */}
+                                {scenarios.map(scenario => (
+                                    <div
+                                        key={scenario.id}
+                                        className="pl-12 pr-4 py-3 bg-slate-50/50 hover:bg-slate-100 transition-colors flex items-center justify-between group cursor-pointer border-l-4 border-l-transparent hover:border-l-purple-300"
+                                        onClick={() => navigate(`/compare/${project.id}/${scenario.id}`)}
+                                    >
+                                        <div className="flex-1 min-w-0 pr-4 relative">
+                                            {/* L-shaped connector visual */}
+                                            <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-4 h-8 border-b border-l border-slate-200 rounded-bl-lg pointer-events-none"></div>
+
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Scenario</span>
+                                                <span className="font-medium text-slate-700 text-sm">
+                                                    {scenario.versionName || 'Untitled Scenario'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center text-xs text-slate-400 gap-2">
+                                                <Calendar size={12} />
+                                                <span>{formatDate(scenario.dateCollected)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                                            Compare <ArrowRight size={14} className="ml-1" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </React.Fragment>
+                        );
+                    })}
 
                     {projects.length === 0 && (
                         <div className="p-8 text-center text-slate-500 text-sm">

@@ -33,7 +33,7 @@ const initialEdges = [
     { id: 'e1-3', source: '1', target: '3', type: 'smoothstep' },
 ];
 
-const OrgChartCanvas = () => {
+const OrgChartCanvas = ({ isComparison = false }) => {
     const {
         nodes, edges, settings, onNodesChange, onEdgesChange, onConnect, reparentNode, deleteNode, addNode
     } = useStore();
@@ -180,7 +180,7 @@ const OrgChartCanvas = () => {
                 className="bg-gray-50"
             >
                 <Background color="#aaa" gap={16} />
-                <Controls />
+                <Controls className={isComparison ? 'mb-12' : ''} />
                 <MiniMap nodeColor={(n) => {
                     if (n.type === 'org') return '#3b82f6';
                     return '#eee';

@@ -337,10 +337,28 @@ const useStore = create((set, get) => ({
         }
     },
 
+    createScenario: async (sourceProjectId, metadata) => {
+        try {
+            const id = await storageService.createScenario(sourceProjectId, metadata);
+            get().loadProjects();
+            return id;
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
+
     updateProject: async (id, metadata) => {
         try {
             await storageService.updateProjectMetadata(id, metadata);
             get().loadProjects();
+
+            // If we are currently viewing this project, update the currentProject state
+            const { currentProjectId } = get();
+            if (currentProjectId === id) {
+                const updatedMeta = storageService.getProjectMetadata(id);
+                set({ currentProject: updatedMeta });
+            }
         } catch (error) {
             console.error(error);
         }
