@@ -110,4 +110,4 @@ A modern, interactive organization chart builder built with React, Vite, and Rea
 
 ## License
 
-This project is private and proprietary.
+This project is licensed under the MIT License - see the [LICENSE](License.txt) file for details.
