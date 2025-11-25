@@ -24,6 +24,7 @@ export const useProjectFilters = (projectList) => {
     const [selectedRegions, setSelectedRegions] = useState([]);
     const [selectedScrumTeams, setSelectedScrumTeams] = useState([]);
     const [selectedCoes, setSelectedCoes] = useState([]);
+    const [showAnalysisOnly, setShowAnalysisOnly] = useState(false);
 
     const [sortBy, setSortBy] = useState('dateCollected-desc');
 
@@ -134,9 +135,18 @@ export const useProjectFilters = (projectList) => {
                 const matchesScrum = checkMultiSelect(project.scrumTeams, selectedScrumTeams);
                 const matchesCoe = checkMultiSelect(project.coes, selectedCoes);
 
+                // Analysis Filter
+                const matchesAnalysis = !showAnalysisOnly || (
+                    project.analysis && (
+                        (project.analysis.swot && Object.values(project.analysis.swot).some(arr => arr.length > 0)) ||
+                        project.analysis.generalNotes ||
+                        project.analysis.strategicAlignment
+                    )
+                );
+
                 return matchesGlobal && matchesAccount && matchesDept &&
                     matchesFunction && matchesSubFunction && matchesEmployeeType &&
-                    matchesRegion && matchesScrum && matchesCoe;
+                    matchesRegion && matchesScrum && matchesCoe && matchesAnalysis;
             })
             .sort((a, b) => {
                 switch (sortBy) {
@@ -200,6 +210,7 @@ export const useProjectFilters = (projectList) => {
         selectedRegions, setSelectedRegions,
         selectedScrumTeams, setSelectedScrumTeams,
         selectedCoes, setSelectedCoes,
+        showAnalysisOnly, setShowAnalysisOnly,
         sortBy, setSortBy,
         accounts, departments,
         functions, subFunctions, employeeTypes, regions, scrumTeams, coes,

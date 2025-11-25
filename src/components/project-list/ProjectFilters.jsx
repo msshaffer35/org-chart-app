@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Search, Building2, ChevronDown, Check, Filter, ArrowUpDown } from 'lucide-react';
+import { Search, Building2, ChevronDown, Check, Filter, ArrowUpDown, FileText } from 'lucide-react';
 import MultiSelectCombobox from '../../components/MultiSelectCombobox';
 
 const ProjectFilters = ({
@@ -19,7 +19,8 @@ const ProjectFilters = ({
     employeeTypes, selectedEmployeeTypes, setSelectedEmployeeTypes,
     regions, selectedRegions, setSelectedRegions,
     scrumTeams, selectedScrumTeams, setSelectedScrumTeams,
-    coes, selectedCoes, setSelectedCoes
+    coes, selectedCoes, setSelectedCoes,
+    showAnalysisOnly, setShowAnalysisOnly
 }) => {
     const accountDropdownRef = useRef(null);
     const deptDropdownRef = useRef(null);
@@ -50,6 +51,20 @@ const ProjectFilters = ({
                     value={globalSearch}
                     onChange={(e) => setGlobalSearch(e.target.value)}
                 />
+            </div>
+
+            {/* Analysis Filter Toggle */}
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => setShowAnalysisOnly(!showAnalysisOnly)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-sm font-medium ${showAnalysisOnly ? 'bg-amber-50 border-amber-200 text-amber-700 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${showAnalysisOnly ? 'bg-amber-500 border-amber-500' : 'border-slate-300 bg-white'}`}>
+                        {showAnalysisOnly && <Check size={10} className="text-white" />}
+                    </div>
+                    <FileText size={16} className={showAnalysisOnly ? 'text-amber-600' : 'text-slate-400'} />
+                    Show Analyzed Projects Only
+                </button>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">

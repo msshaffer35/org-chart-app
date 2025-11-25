@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, ChevronDown, ChevronRight, Briefcase, Target, Pencil, Trash2, Calendar } from 'lucide-react';
+import { Building2, ChevronDown, ChevronRight, Briefcase, Target, Pencil, Trash2, Calendar, FileText } from 'lucide-react';
 
 const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
     const navigate = useNavigate();
@@ -20,6 +20,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
             day: '2-digit'
         });
     };
+
+    const hasAnalysis = project.analysis && (
+        (project.analysis.swot && Object.values(project.analysis.swot).some(arr => arr.length > 0)) ||
+        project.analysis.generalNotes ||
+        project.analysis.strategicAlignment
+    );
 
     return (
         <div
@@ -47,6 +53,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
                     )}
                     {project.scrumTeams && project.scrumTeams.length > 0 && (
                         <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-medium rounded-full" title={`Scrum: ${project.scrumTeams.join(', ')}`}>Scrum</span>
+                    )}
+                    {hasAnalysis && (
+                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded-full flex items-center gap-1">
+                            <FileText size={10} />
+                            Analysis
+                        </span>
                     )}
                 </div>
             </div>
@@ -76,6 +88,18 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
                         </div>
                     </div>
                     <div className="flex gap-1">
+                        {hasAnalysis && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/analysis/${project.id}`);
+                                }}
+                                className="text-slate-400 hover:text-amber-600 transition-colors p-1 rounded-md hover:bg-amber-50"
+                                title="Open Analysis"
+                            >
+                                <FileText size={18} />
+                            </button>
+                        )}
 
                         <button
                             onClick={(e) => onCreateScenario(e, project)}

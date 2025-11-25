@@ -38,7 +38,8 @@ const ProjectList = () => {
         accounts, departments,
         functions, subFunctions, employeeTypes, regions, scrumTeams, coes,
         filteredAccounts, filteredDepartments, filteredProjects,
-        projectTree, groupedProjects
+        projectTree, groupedProjects,
+        showAnalysisOnly, setShowAnalysisOnly
     } = useProjectFilters(projectList);
 
     // Form State
@@ -213,6 +214,7 @@ const ProjectList = () => {
                     regions={regions} selectedRegions={selectedRegions} setSelectedRegions={setSelectedRegions}
                     scrumTeams={scrumTeams} selectedScrumTeams={selectedScrumTeams} setSelectedScrumTeams={setSelectedScrumTeams}
                     coes={coes} selectedCoes={selectedCoes} setSelectedCoes={setSelectedCoes}
+                    showAnalysisOnly={showAnalysisOnly} setShowAnalysisOnly={setShowAnalysisOnly}
                 />
 
                 {filteredProjects.length === 0 ? (
