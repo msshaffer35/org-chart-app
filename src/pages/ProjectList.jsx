@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { Plus, RefreshCw, LayoutGrid, List, Search } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, List, Search, GitCompare } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import AccountCard from '../components/AccountCard';
 import { useProjectFilters } from '../hooks/useProjectFilters';
@@ -176,6 +176,13 @@ const ProjectList = () => {
                         >
                             <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
                             {isRefreshing ? 'Refreshing...' : 'Refresh Metadata'}
+                        </button>
+                        <button
+                            onClick={() => navigate('/analysis/new')}
+                            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm"
+                        >
+                            <GitCompare size={20} />
+                            New Analysis
                         </button>
                         <button
                             onClick={openCreateModal}
