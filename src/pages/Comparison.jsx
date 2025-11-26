@@ -8,6 +8,7 @@ import ReadOnlyCanvas from '../components/Canvas/ReadOnlyCanvas';
 import OrgChartCanvas from '../components/Canvas/OrgChartCanvas';
 import AnalysisPanel from '../components/AnalysisPanel';
 import MainLayout from '../components/Layout/MainLayout';
+import DualPaneLayout from '../components/Layout/DualPaneLayout';
 import { ArrowLeft, RefreshCw, AlertCircle, FileText } from 'lucide-react';
 
 
@@ -145,32 +146,32 @@ const Comparison = () => {
                 </div>
 
 
-                {/* Split View */}
-                <div className="flex flex-1 overflow-hidden">
-                    {/* Left: Base (ReadOnly) */}
-                    <div className="w-1/2 h-full relative">
-                        <ReactFlowProvider>
-                            <ReadOnlyCanvas nodes={baseData.nodes} edges={baseData.edges} />
-                        </ReactFlowProvider>
-                    </div>
+                {/* Split View using DualPaneLayout */}
+                <DualPaneLayout
+                    leftPane={
+                        <ReadOnlyCanvas
+                            nodes={baseData.nodes}
+                            edges={baseData.edges}
+                            label="Before"
+                        />
+                    }
+                    rightPane={
+                        <>
+                            <OrgChartCanvas isComparison={true} />
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider pointer-events-none z-10">
+                                Scenario / Target
+                            </div>
 
-                    {/* Right: Target (Editable) */}
-                    <div className="w-1/2 h-full relative border-l-4 border-slate-200">
-                        <OrgChartCanvas isComparison={true} />
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider pointer-events-none z-10">
-                            Scenario / Target
-                        </div>
-
-                        {showAnalysis && currentProject && (
-                            <AnalysisPanel
-                                projectId={targetId}
-                                initialData={currentProject.analysis}
-                                onClose={() => setShowAnalysis(false)}
-                            />
-                        )}
-                    </div>
-
-                </div>
+                            {showAnalysis && currentProject && (
+                                <AnalysisPanel
+                                    projectId={targetId}
+                                    initialData={currentProject.analysis}
+                                    onClose={() => setShowAnalysis(false)}
+                                />
+                            )}
+                        </>
+                    }
+                />
             </div>
         </MainLayout>
     );

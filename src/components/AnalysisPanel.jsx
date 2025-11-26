@@ -2,8 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Save, X, Check } from 'lucide-react';
 import useStore from '../store/useStore';
 
-const AnalysisPanel = ({ projectId, initialData, onClose }) => {
+const AnalysisPanel = ({
+    projectId = null,
+    comparisonId = null,
+    leftProjectId = null,
+    rightProjectId = null,
+    initialData,
+    onSave = null,
+    onClose
+}) => {
     const updateProject = useStore((state) => state.updateProject);
+
+    // Detect if in comparison mode
+    const isComparison = !!comparisonId;
 
     const [activeTab, setActiveTab] = useState('swot'); // 'swot' | 'notes'
     const [data, setData] = useState({
@@ -30,8 +41,13 @@ const AnalysisPanel = ({ projectId, initialData, onClose }) => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // We are updating the project metadata with the 'analysis' field
-            await updateProject(projectId, { analysis: data });
+            if (isComparison && onSave) {
+                // Comparison mode: Use parent's onSave handler
+                await onSave(data);
+            } else if (projectId) {
+                // Single project mode: Update project metadata via store
+                await updateProject(projectId, { analysis: data });
+            }
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000);
         } catch (error) {
@@ -64,7 +80,16 @@ const AnalysisPanel = ({ projectId, initialData, onClose }) => {
         <div className="h-full flex flex-col bg-white border-l border-slate-200 shadow-xl w-96 absolute right-0 top-0 z-30">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-                <h2 className="font-semibold text-slate-800">Analysis & Commentary</h2>
+                <div className="flex flex-col">
+                    <h2 className="font-semibold text-slate-800">
+                        {isComparison ? 'Comparison Analysis' : 'Analysis & Commentary'}
+                    </h2>
+                    {isComparison && (
+                        <span className="text-xs text-slate-500 mt-0.5">
+                            Comparing two organizations
+                        </span>
+                    )}
+                </div>
                 <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
                     <X size={20} />
                 </button>
