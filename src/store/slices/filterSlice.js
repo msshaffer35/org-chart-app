@@ -1,4 +1,4 @@
-import { calculateNodeDepths, getDescendantSummary } from '../../utils/graphUtils';
+import { calculateNodeDepths, getHiddenDescendantSummary } from '../../utils/graphUtils';
 
 /**
  * Filter Slice
@@ -95,26 +95,34 @@ export const createFilterSlice = (set, get) => ({
             // Intersect
             visibleIds = new Set([...visibleIds].filter(x => levelVisibleIds.has(x)));
 
-            // Calculate Aggregations for Boundary Nodes (nodes at maxDepth or leaf of visibility)
+            // Calculate Aggregations for Boundary Nodes
+            // A boundary node is one that:
+            // 1. Is visible (in visibleIds)
+            // 2. Has at least one hidden descendant
             newNodes = newNodes.map(node => {
-                const depth = depths[node.id];
-                const isBoundary = depth === maxDepth;
+                const isVisible = visibleIds.has(node.id);
 
-                if (isBoundary && visibleIds.has(node.id)) {
-                    // Calculate hidden descendants
-                    const summary = getDescendantSummary(node.id, edges, nodes);
-                    return {
-                        ...node,
-                        data: {
-                            ...node.data,
-                            _deidSummary: summary // Inject summary into data
-                        }
-                    };
-                } else {
-                    // Clear summary if not boundary
-                    const { _deidSummary, ...restData } = node.data;
-                    return { ...node, data: restData };
+                if (isVisible) {
+                    // Check if this node has any hidden children
+                    const childEdges = edges.filter(e => e.source === node.id);
+                    const hasHiddenChildren = childEdges.some(e => !visibleIds.has(e.target));
+
+                    if (hasHiddenChildren) {
+                        // This is a boundary node - calculate summary of hidden descendants
+                        const summary = getHiddenDescendantSummary(node.id, edges, nodes, visibleIds);
+                        return {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                _deidSummary: summary // Inject summary into data
+                            }
+                        };
+                    }
                 }
+
+                // Not a boundary - clear any existing summary
+                const { _deidSummary, ...restData } = node.data;
+                return { ...node, data: restData };
             });
         } else {
             // Clear summaries if mode disabled
