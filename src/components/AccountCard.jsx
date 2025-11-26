@@ -111,22 +111,29 @@ const AccountCard = ({ accountName, projects, onCreateNew }) => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                         {hasAnalysis && (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     navigate(`/analysis/${project.id}`);
                                                 }}
-                                                className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-md text-sm font-medium transition-colors"
                                             >
                                                 <FileText size={14} />
                                                 Analysis
                                             </button>
                                         )}
-                                        <div className="flex items-center text-blue-600 text-sm font-medium">
-                                            View <ArrowRight size={14} className="ml-1" />
-                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/project/${project.id}`);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-sm font-medium transition-colors"
+                                        >
+                                            View Chart
+                                            <ArrowRight size={14} />
+                                        </button>
                                     </div>
                                 </div>
 
