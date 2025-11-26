@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, ChevronDown, ChevronUp, Plus, ArrowRight, Building2, Briefcase } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, Plus, ArrowRight, Building2, Briefcase, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AccountCard = ({ accountName, projects, onCreateNew }) => {
@@ -71,6 +71,12 @@ const AccountCard = ({ accountName, projects, onCreateNew }) => {
                         // Find scenarios for this project
                         const scenarios = sortedProjects.filter(s => s.type === 'SCENARIO' && s.sourceProjectId === project.id);
 
+                        const hasAnalysis = project.analysis && (
+                            (project.analysis.swot && Object.values(project.analysis.swot).some(arr => arr.length > 0)) ||
+                            project.analysis.generalNotes ||
+                            project.analysis.strategicAlignment
+                        );
+
                         return (
                             <React.Fragment key={project.id}>
                                 {/* Parent Project Row */}
@@ -91,6 +97,12 @@ const AccountCard = ({ accountName, projects, onCreateNew }) => {
                                                 {project.coes && project.coes.length > 0 && (
                                                     <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[10px] rounded border border-purple-100">COE</span>
                                                 )}
+                                                {hasAnalysis && (
+                                                    <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 text-[10px] rounded border border-amber-100 flex items-center gap-1">
+                                                        <FileText size={10} />
+                                                        Analysis
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex items-center text-xs text-slate-400 gap-2">
@@ -99,8 +111,29 @@ const AccountCard = ({ accountName, projects, onCreateNew }) => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
-                                        View <ArrowRight size={14} className="ml-1" />
+                                    <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                        {hasAnalysis && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/analysis/${project.id}`);
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-md text-sm font-medium transition-colors"
+                                            >
+                                                <FileText size={14} />
+                                                Analysis
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/project/${project.id}`);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-sm font-medium transition-colors"
+                                        >
+                                            View Chart
+                                            <ArrowRight size={14} />
+                                        </button>
                                     </div>
                                 </div>
 

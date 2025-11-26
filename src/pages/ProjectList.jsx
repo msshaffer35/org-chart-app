@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { Plus, RefreshCw, LayoutGrid, List, Search } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, List, Search, GitCompare } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import AccountCard from '../components/AccountCard';
 import { useProjectFilters } from '../hooks/useProjectFilters';
@@ -38,7 +38,8 @@ const ProjectList = () => {
         accounts, departments,
         functions, subFunctions, employeeTypes, regions, scrumTeams, coes,
         filteredAccounts, filteredDepartments, filteredProjects,
-        projectTree, groupedProjects
+        projectTree, groupedProjects,
+        selectedProjectTypes, setSelectedProjectTypes
     } = useProjectFilters(projectList);
 
     // Form State
@@ -178,6 +179,13 @@ const ProjectList = () => {
                             {isRefreshing ? 'Refreshing...' : 'Refresh Metadata'}
                         </button>
                         <button
+                            onClick={() => navigate('/analysis/new')}
+                            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm"
+                        >
+                            <GitCompare size={20} />
+                            New Analysis
+                        </button>
+                        <button
                             onClick={openCreateModal}
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
                         >
@@ -206,6 +214,7 @@ const ProjectList = () => {
                     regions={regions} selectedRegions={selectedRegions} setSelectedRegions={setSelectedRegions}
                     scrumTeams={scrumTeams} selectedScrumTeams={selectedScrumTeams} setSelectedScrumTeams={setSelectedScrumTeams}
                     coes={coes} selectedCoes={selectedCoes} setSelectedCoes={setSelectedCoes}
+                    selectedProjectTypes={selectedProjectTypes} setSelectedProjectTypes={setSelectedProjectTypes}
                 />
 
                 {filteredProjects.length === 0 ? (

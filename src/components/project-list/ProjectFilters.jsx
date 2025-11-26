@@ -19,7 +19,8 @@ const ProjectFilters = ({
     employeeTypes, selectedEmployeeTypes, setSelectedEmployeeTypes,
     regions, selectedRegions, setSelectedRegions,
     scrumTeams, selectedScrumTeams, setSelectedScrumTeams,
-    coes, selectedCoes, setSelectedCoes
+    coes, selectedCoes, setSelectedCoes,
+    selectedProjectTypes, setSelectedProjectTypes
 }) => {
     const accountDropdownRef = useRef(null);
     const deptDropdownRef = useRef(null);
@@ -223,6 +224,17 @@ const ProjectFilters = ({
                     selectedValues={selectedCoes}
                     onChange={setSelectedCoes}
                     placeholder="All COEs"
+                />
+            </div>
+
+            {/* Project Type Filter Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-4 border-t border-slate-100">
+                <MultiSelectCombobox
+                    label="Project Type"
+                    options={['Charts', 'Analyzed Projects', 'Scenarios']}
+                    selectedValues={selectedProjectTypes}
+                    onChange={setSelectedProjectTypes}
+                    placeholder="All Project Types"
                 />
             </div>
         </div>
