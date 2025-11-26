@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import MainLayout from '../components/Layout/MainLayout';
 import { ArrowLeft, ArrowRight, Plus, GitCompare, Copy } from 'lucide-react';
 import { comparisonStorageService } from '../services/comparisonStorageService';

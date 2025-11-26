@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layers, ArrowDown, ArrowRight, Settings, Trash2, Users } from 'lucide-react';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 
 const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRightPanel }) => {
     const layoutNodes = useStore((state) => state.layoutNodes);

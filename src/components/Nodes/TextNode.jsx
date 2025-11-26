@@ -1,6 +1,6 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
 import { Handle, Position } from 'reactflow';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 
 const TextNode = ({ id, data, selected }) => {
     const updateNodeData = useStore((state) => state.updateNodeData);

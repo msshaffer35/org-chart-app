@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import { Plus, RefreshCw, LayoutGrid, List, Search, GitCompare } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import AccountCard from '../components/AccountCard';

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 import { Filter, X } from 'lucide-react';
 
 const FilterPanel = () => {

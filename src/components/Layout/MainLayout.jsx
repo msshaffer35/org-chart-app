@@ -3,7 +3,7 @@ import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import TopToolbar from './TopToolbar';
 import { Menu, X } from 'lucide-react';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 
 const MainLayout = ({ children }) => {
     const [showLeftPanel, setShowLeftPanel] = useState(true);

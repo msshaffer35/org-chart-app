@@ -1,6 +1,6 @@
 import React from 'react';
 import { Settings, Sliders, Bold, Italic, Type, Palette } from 'lucide-react';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 
 const RightPanel = () => {
     const nodes = useStore((state) => state.nodes);
