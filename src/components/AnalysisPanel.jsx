@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, Check } from 'lucide-react';
+import { Save, X, Check, FileDown } from 'lucide-react';
 import useStore from '../store';
+import { exportToDocx } from '../services/docxExportService';
 
 const AnalysisPanel = ({
     projectId = null,
@@ -12,6 +13,7 @@ const AnalysisPanel = ({
     onClose
 }) => {
     const updateProject = useStore((state) => state.updateProject);
+    const currentProject = useStore((state) => state.currentProject);
 
     // Detect if in comparison mode
     const isComparison = !!comparisonId;
@@ -55,6 +57,22 @@ const AnalysisPanel = ({
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleExport = () => {
+        // Prepare data for export
+        const analysisData = {
+            name: isComparison ? 'Comparison Analysis' : (initialData?.name || 'Analysis'),
+            analysis: data
+        };
+
+        // For project data, we might need to fetch it or pass it down. 
+        // In single project mode, we have currentProject from store.
+        // In comparison mode, we might not have full details here easily without passing them.
+        // For now, use currentProject if available.
+        const projectData = projectId ? currentProject : null;
+
+        exportToDocx(analysisData, projectData);
     };
 
     const handleSwotChange = (type, index, value) => {
@@ -176,14 +194,22 @@ const AnalysisPanel = ({
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50">
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex gap-2">
+                <button
+                    onClick={handleExport}
+                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                    title="Export to Word"
+                >
+                    <FileDown size={16} />
+                    Export
+                </button>
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg transition-colors disabled:opacity-50 ${isSaved ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors disabled:opacity-50 ${isSaved ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                 >
                     {isSaved ? <Check size={16} /> : <Save size={16} />}
-                    {isSaving ? 'Saving...' : (isSaved ? 'Saved!' : 'Save Analysis')}
+                    {isSaving ? 'Saving...' : (isSaved ? 'Saved!' : 'Save')}
                 </button>
             </div>
         </div>
