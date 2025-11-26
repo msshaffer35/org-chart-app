@@ -3,5 +3,5 @@
 html, body, #root {
   height: 100%;
   margin: 0;
-  overflow: hidden; /* Prevent scrollbars on the main container */
+  overflow: auto; /* Allow scrolling when content exceeds viewport */
 }

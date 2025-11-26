@@ -8,6 +8,7 @@ import { useProjectFilters } from '../hooks/useProjectFilters';
 import ProjectFilters from '../components/project-list/ProjectFilters';
 import ProjectCard from '../components/project-list/ProjectCard';
 import ProjectModal from '../components/project-list/ProjectModal';
+import AnalysisList from '../components/analysis-list/AnalysisList';
 
 const ProjectList = () => {
     const navigate = useNavigate();
@@ -142,42 +143,17 @@ const ProjectList = () => {
         }
     };
 
+    const [activeTab, setActiveTab] = useState('projects'); // 'projects' | 'analyses'
+
     return (
         <div className="min-h-screen bg-slate-50 p-8">
             <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">My Projects</h1>
-                        <p className="text-slate-500 mt-2">Manage your organization charts</p>
+                        <h1 className="text-3xl font-bold text-slate-900">My Dashboard</h1>
+                        <p className="text-slate-500 mt-2">Manage your organization charts and analyses</p>
                     </div>
                     <div className="flex gap-3">
-                        {/* View Toggle */}
-                        <div className="flex bg-white rounded-lg border border-slate-200 p-1">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                                title="Grid View"
-                            >
-                                <LayoutGrid size={20} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('accounts')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'accounts' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                                title="Account View"
-                            >
-                                <List size={20} />
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={handleRefreshMetadata}
-                            disabled={isRefreshing}
-                            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm disabled:opacity-50"
-                            title="Refresh metadata for all projects"
-                        >
-                            <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
-                            {isRefreshing ? 'Refreshing...' : 'Refresh Metadata'}
-                        </button>
                         <button
                             onClick={() => navigate('/analysis/new')}
                             className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm"
@@ -195,75 +171,133 @@ const ProjectList = () => {
                     </div>
                 </div>
 
-                {/* Search & Filter Bar */}
-                <ProjectFilters
-                    viewMode={viewMode}
-                    globalSearch={globalSearch} setGlobalSearch={setGlobalSearch}
-                    selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount}
-                    accountSearch={accountSearch} setAccountSearch={setAccountSearch}
-                    isAccountDropdownOpen={isAccountDropdownOpen} setIsAccountDropdownOpen={setIsAccountDropdownOpen}
-                    filteredAccounts={filteredAccounts}
-                    selectedDept={selectedDept} setSelectedDept={setSelectedDept}
-                    deptSearch={deptSearch} setDeptSearch={setDeptSearch}
-                    isDeptDropdownOpen={isDeptDropdownOpen} setIsDeptDropdownOpen={setIsDeptDropdownOpen}
-                    filteredDepartments={filteredDepartments}
-                    sortBy={sortBy} setSortBy={setSortBy}
-                    functions={functions} selectedFunctions={selectedFunctions} setSelectedFunctions={setSelectedFunctions}
-                    subFunctions={subFunctions} selectedSubFunctions={selectedSubFunctions} setSelectedSubFunctions={setSelectedSubFunctions}
-                    employeeTypes={employeeTypes} selectedEmployeeTypes={selectedEmployeeTypes} setSelectedEmployeeTypes={setSelectedEmployeeTypes}
-                    regions={regions} selectedRegions={selectedRegions} setSelectedRegions={setSelectedRegions}
-                    scrumTeams={scrumTeams} selectedScrumTeams={selectedScrumTeams} setSelectedScrumTeams={setSelectedScrumTeams}
-                    coes={coes} selectedCoes={selectedCoes} setSelectedCoes={setSelectedCoes}
-                    selectedProjectTypes={selectedProjectTypes} setSelectedProjectTypes={setSelectedProjectTypes}
-                />
+                {/* Tabs */}
+                <div className="flex border-b border-slate-200 mb-6">
+                    <button
+                        onClick={() => setActiveTab('projects')}
+                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'projects'
+                            ? 'border-blue-600 text-blue-600'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
+                    >
+                        Projects
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('analyses')}
+                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'analyses'
+                            ? 'border-purple-600 text-purple-600'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
+                    >
+                        Saved Analyses
+                    </button>
+                </div>
 
-                {filteredProjects.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="text-slate-400" size={32} />
-                        </div>
-                        <h3 className="text-lg font-medium text-slate-900">No projects found</h3>
-                        <p className="text-slate-500 mt-2 mb-6">
-                            {projectList.length === 0
-                                ? "Create your first organization chart to get started"
-                                : "Try adjusting your search or filters"}
-                        </p>
-                        {projectList.length === 0 && (
-                            <button
-                                onClick={openCreateModal}
-                                className="text-blue-600 font-medium hover:text-blue-700"
-                            >
-                                Create a project
-                            </button>
-                        )}
-                    </div>
-                ) : (
+                {activeTab === 'projects' ? (
                     <>
-                        {viewMode === 'grid' ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {projectTree.map((project) => (
-                                    <ProjectCard
-                                        key={project.id}
-                                        project={project}
-                                        onEdit={openEditModal}
-                                        onDelete={handleDelete}
-                                        onCreateScenario={handleCreateScenario}
-                                    />
-                                ))}
+                        {/* Project View Controls */}
+                        <div className="flex justify-end mb-4 gap-3">
+                            <div className="flex bg-white rounded-lg border border-slate-200 p-1">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    title="Grid View"
+                                >
+                                    <LayoutGrid size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('accounts')}
+                                    className={`p-2 rounded-md transition-all ${viewMode === 'accounts' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    title="Account View"
+                                >
+                                    <List size={20} />
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={handleRefreshMetadata}
+                                disabled={isRefreshing}
+                                className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                                title="Refresh metadata for all projects"
+                            >
+                                <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
+                                {isRefreshing ? 'Refreshing...' : 'Refresh Metadata'}
+                            </button>
+                        </div>
+
+                        {/* Search & Filter Bar */}
+                        <ProjectFilters
+                            viewMode={viewMode}
+                            globalSearch={globalSearch} setGlobalSearch={setGlobalSearch}
+                            selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount}
+                            accountSearch={accountSearch} setAccountSearch={setAccountSearch}
+                            isAccountDropdownOpen={isAccountDropdownOpen} setIsAccountDropdownOpen={setIsAccountDropdownOpen}
+                            filteredAccounts={filteredAccounts}
+                            selectedDept={selectedDept} setSelectedDept={setSelectedDept}
+                            deptSearch={deptSearch} setDeptSearch={setDeptSearch}
+                            isDeptDropdownOpen={isDeptDropdownOpen} setIsDeptDropdownOpen={setIsDeptDropdownOpen}
+                            filteredDepartments={filteredDepartments}
+                            sortBy={sortBy} setSortBy={setSortBy}
+                            functions={functions} selectedFunctions={selectedFunctions} setSelectedFunctions={setSelectedFunctions}
+                            subFunctions={subFunctions} selectedSubFunctions={selectedSubFunctions} setSelectedSubFunctions={setSelectedSubFunctions}
+                            employeeTypes={employeeTypes} selectedEmployeeTypes={selectedEmployeeTypes} setSelectedEmployeeTypes={setSelectedEmployeeTypes}
+                            regions={regions} selectedRegions={selectedRegions} setSelectedRegions={setSelectedRegions}
+                            scrumTeams={scrumTeams} selectedScrumTeams={selectedScrumTeams} setSelectedScrumTeams={setSelectedScrumTeams}
+                            coes={coes} selectedCoes={selectedCoes} setSelectedCoes={setSelectedCoes}
+                            selectedProjectTypes={selectedProjectTypes} setSelectedProjectTypes={setSelectedProjectTypes}
+                        />
+
+                        {filteredProjects.length === 0 ? (
+                            <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Search className="text-slate-400" size={32} />
+                                </div>
+                                <h3 className="text-lg font-medium text-slate-900">No projects found</h3>
+                                <p className="text-slate-500 mt-2 mb-6">
+                                    {projectList.length === 0
+                                        ? "Create your first organization chart to get started"
+                                        : "Try adjusting your search or filters"}
+                                </p>
+                                {projectList.length === 0 && (
+                                    <button
+                                        onClick={openCreateModal}
+                                        className="text-blue-600 font-medium hover:text-blue-700"
+                                    >
+                                        Create a project
+                                    </button>
+                                )}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {Object.entries(groupedProjects).map(([account, projects]) => (
-                                    <AccountCard
-                                        key={account}
-                                        accountName={account}
-                                        projects={projects}
-                                        onCreateNew={openCreateModalForAccount}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                {viewMode === 'grid' ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {projectTree.map((project) => (
+                                            <ProjectCard
+                                                key={project.id}
+                                                project={project}
+                                                onEdit={openEditModal}
+                                                onDelete={handleDelete}
+                                                onCreateScenario={handleCreateScenario}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {Object.entries(groupedProjects).map(([account, projects]) => (
+                                            <AccountCard
+                                                key={account}
+                                                accountName={account}
+                                                projects={projects}
+                                                onCreateNew={openCreateModalForAccount}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </>
+                ) : (
+                    <AnalysisList />
                 )}
 
                 {/* Create/Edit Project Modal */}
