@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { UserPlus, FilePlus, Trash2, Upload } from 'lucide-react';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 import { getLayoutedElements } from '../../utils/layout';
 import ImportModal from '../Import/ImportModal';
 

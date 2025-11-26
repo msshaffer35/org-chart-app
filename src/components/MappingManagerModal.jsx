@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import { X, Save, RotateCcw } from 'lucide-react';
 
 const MappingManagerModal = ({ isOpen, onClose }) => {

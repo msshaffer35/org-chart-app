@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, Check } from 'lucide-react';
-import useStore from '../store/useStore';
+import useStore from '../store';
 
 const AnalysisPanel = ({
     projectId = null,

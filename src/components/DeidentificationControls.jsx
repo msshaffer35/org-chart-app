@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import { Shield, ShieldAlert, Settings, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
 import MappingManagerModal from './MappingManagerModal';
 

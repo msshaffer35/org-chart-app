@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { User, Briefcase, Building, Plus, Search } from 'lucide-react';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 
 const OrgNode = ({ id, data, selected }) => {
     const updateNodeData = useStore((state) => state.updateNodeData);

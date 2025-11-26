@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactFlow, { ReactFlowProvider } from 'reactflow';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import { storageService } from '../services/storageService';
 import { comparisonStorageService } from '../services/comparisonStorageService';
 import { diffOrgCharts } from '../utils/diffUtils';

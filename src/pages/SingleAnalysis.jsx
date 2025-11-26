@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import { comparisonStorageService } from '../services/comparisonStorageService';
 import OrgChartCanvas from '../components/Canvas/OrgChartCanvas';
 import AnalysisPanel from '../components/AnalysisPanel';

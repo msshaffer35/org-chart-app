@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import OrgChartCanvas from '../components/Canvas/OrgChartCanvas';
 import MainLayout from '../components/Layout/MainLayout';
-import useStore from '../store/useStore';
+import useStore from '../store';
 import { ArrowLeft } from 'lucide-react';
 
 const Editor = () => {

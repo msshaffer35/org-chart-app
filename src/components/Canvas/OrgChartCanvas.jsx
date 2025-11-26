@@ -6,7 +6,7 @@ import ReactFlow, {
     Panel
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import useStore from '../../store/useStore';
+import useStore from '../../store';
 import OrgNode from '../Nodes/OrgNode';
 import TextNode from '../Nodes/TextNode';
 import { getLayoutedElements } from '../../utils/layout';

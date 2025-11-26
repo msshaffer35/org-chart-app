@@ -165,13 +165,45 @@ const useStore = create((set, get) => ({
             set(state => ({ settings: { ...state.settings, layoutDirection: direction } }));
         }
 
+        // Calculate center of current visible nodes before layout
+        const visibleNodes = nodes.filter(n => !n.hidden);
+        let centerX = 0, centerY = 0;
+        if (visibleNodes.length > 0) {
+            const sumX = visibleNodes.reduce((sum, n) => sum + n.position.x, 0);
+            const sumY = visibleNodes.reduce((sum, n) => sum + n.position.y, 0);
+            centerX = sumX / visibleNodes.length;
+            centerY = sumY / visibleNodes.length;
+        }
+
         const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
             nodes,
             edges,
             dir,
             settings.spacing // Pass spacing to layout util (need to update util)
         );
-        set({ nodes: [...layoutedNodes], edges: [...layoutedEdges] });
+
+        // Calculate center of layouted nodes
+        const visibleLayoutedNodes = layoutedNodes.filter(n => !n.hidden);
+        let newCenterX = 0, newCenterY = 0;
+        if (visibleLayoutedNodes.length > 0) {
+            const sumX = visibleLayoutedNodes.reduce((sum, n) => sum + n.position.x, 0);
+            const sumY = visibleLayoutedNodes.reduce((sum, n) => sum + n.position.y, 0);
+            newCenterX = sumX / visibleLayoutedNodes.length;
+            newCenterY = sumY / visibleLayoutedNodes.length;
+        }
+
+        // Shift all nodes to maintain the original center position
+        const offsetX = centerX - newCenterX;
+        const offsetY = centerY - newCenterY;
+        const centeredNodes = layoutedNodes.map(n => ({
+            ...n,
+            position: {
+                x: n.position.x + offsetX,
+                y: n.position.y + offsetY
+            }
+        }));
+
+        set({ nodes: [...centeredNodes], edges: [...layoutedEdges] });
         debouncedSave(get());
     },
 
@@ -249,7 +281,7 @@ const useStore = create((set, get) => ({
             edges: [...edges, newEdge]
         });
 
-        // Trigger layout after a brief delay to allow render
+        // Trigger layout after a brief delay to allow render (will auto-center)
         setTimeout(() => {
             get().layoutNodes('TB');
         }, 10);
@@ -292,7 +324,7 @@ const useStore = create((set, get) => ({
         set({ edges: newEdges });
         debouncedSave(get());
 
-        // Auto-layout
+        // Auto-layout (will auto-center)
         setTimeout(() => {
             get().layoutNodes('TB');
         }, 10);
