@@ -145,10 +145,15 @@ export const useProjectFilters = (projectList) => {
                         project.analysis.strategicAlignment
                     );
 
+                    // Check if this chart has scenarios (children in the full project list)
+                    const hasScenarios = projectList.some(p =>
+                        p.type === 'SCENARIO' && p.sourceProjectId === project.id
+                    );
+
                     return selectedProjectTypes.some(type => {
                         if (type === 'Charts') return project.type !== 'SCENARIO';
                         if (type === 'Analyzed Projects') return hasAnalysis;
-                        if (type === 'Scenarios') return project.type === 'SCENARIO';
+                        if (type === 'Scenarios') return hasScenarios; // Show charts that HAVE scenarios
                         return false;
                     });
                 })();
