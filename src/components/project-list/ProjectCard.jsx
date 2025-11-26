@@ -137,6 +137,18 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
                                 View Analysis
                             </button>
                         )}
+                        {project.children && project.children.length > 0 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsExpanded(!isExpanded);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors text-sm font-medium"
+                            >
+                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                View Scenarios
+                            </button>
+                        )}
                     </div>
 
                     {/* Date Footer */}
