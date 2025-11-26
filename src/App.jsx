@@ -15,6 +15,7 @@ function App() {
         <Route path="/project/:projectId" element={<Editor />} />
         <Route path="/compare/:baseId/:targetId" element={<Comparison />} />
         <Route path="/view-side-by-side/:leftId/:rightId" element={<SideBySideView />} />
+        <Route path="/analysis/side-by-side/:analysisId" element={<SideBySideView />} />
         <Route path="/analysis/new" element={<AnalysisSetup />} />
         <Route path="/analysis/:projectId" element={<SingleAnalysis />} />
       </Routes>

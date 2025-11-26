@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import MainLayout from '../components/Layout/MainLayout';
 import { ArrowLeft, ArrowRight, Plus, GitCompare, Copy } from 'lucide-react';
+import { comparisonStorageService } from '../services/comparisonStorageService';
 
 /**
  * AnalysisSetup Component
@@ -83,7 +84,9 @@ const AnalysisSetup = () => {
         }
     };
 
-    const handleStartAnalysis = () => {
+
+
+    const handleStartAnalysis = async () => {
         if (!baseProject || !targetProject) return;
 
         if (selectedMode === 'temporal') {
@@ -91,7 +94,19 @@ const AnalysisSetup = () => {
             navigate(`/compare/${baseProject.id}/${targetProject.id}`);
         } else if (selectedMode === 'spatial') {
             // Option 2: Compare different organizations
-            navigate(`/view-side-by-side/${baseProject.id}/${targetProject.id}`);
+            try {
+                const newId = await comparisonStorageService.createAnalysis(
+                    'side-by-side',
+                    [baseProject.id, targetProject.id],
+                    {
+                        leftName: baseProject.account,
+                        rightName: targetProject.account
+                    }
+                );
+                navigate(`/analysis/side-by-side/${newId}`);
+            } catch (error) {
+                console.error("Failed to create analysis", error);
+            }
         }
     };
 
@@ -255,11 +270,10 @@ const AnalysisSetup = () => {
                                     <div
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, 'base')}
-                                        className={`flex-1 h-64 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center relative ${
-                                            baseProject
-                                                ? `border-${selectedMode === 'temporal' ? 'blue' : 'purple'}-500 bg-${selectedMode === 'temporal' ? 'blue' : 'purple'}-50`
-                                                : 'border-slate-300 bg-slate-100 hover:border-slate-400'
-                                        }`}
+                                        className={`flex-1 h-64 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center relative ${baseProject
+                                            ? `border-${selectedMode === 'temporal' ? 'blue' : 'purple'}-500 bg-${selectedMode === 'temporal' ? 'blue' : 'purple'}-50`
+                                            : 'border-slate-300 bg-slate-100 hover:border-slate-400'
+                                            }`}
                                     >
                                         {baseProject ? (
                                             <div className="text-center">
@@ -292,11 +306,10 @@ const AnalysisSetup = () => {
                                     <div
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, 'target')}
-                                        className={`flex-1 h-64 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center relative ${
-                                            targetProject
-                                                ? `border-${selectedMode === 'temporal' ? 'blue' : 'purple'}-500 bg-${selectedMode === 'temporal' ? 'blue' : 'purple'}-50`
-                                                : 'border-slate-300 bg-slate-100 hover:border-slate-400'
-                                        }`}
+                                        className={`flex-1 h-64 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center relative ${targetProject
+                                            ? `border-${selectedMode === 'temporal' ? 'blue' : 'purple'}-500 bg-${selectedMode === 'temporal' ? 'blue' : 'purple'}-50`
+                                            : 'border-slate-300 bg-slate-100 hover:border-slate-400'
+                                            }`}
                                     >
                                         {targetProject ? (
                                             <div className="text-center">
@@ -327,11 +340,10 @@ const AnalysisSetup = () => {
                                     <button
                                         onClick={handleStartAnalysis}
                                         disabled={!baseProject || !targetProject}
-                                        className={`px-8 py-3 rounded-lg font-semibold shadow-sm transition-all flex items-center gap-2 text-lg disabled:bg-slate-300 disabled:cursor-not-allowed text-white ${
-                                            selectedMode === 'temporal'
-                                                ? 'bg-blue-600 hover:bg-blue-700'
-                                                : 'bg-purple-600 hover:bg-purple-700'
-                                        }`}
+                                        className={`px-8 py-3 rounded-lg font-semibold shadow-sm transition-all flex items-center gap-2 text-lg disabled:bg-slate-300 disabled:cursor-not-allowed text-white ${selectedMode === 'temporal'
+                                            ? 'bg-blue-600 hover:bg-blue-700'
+                                            : 'bg-purple-600 hover:bg-purple-700'
+                                            }`}
                                     >
                                         {getButtonText()}
                                         <ArrowRight size={20} />

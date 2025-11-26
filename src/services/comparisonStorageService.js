@@ -6,30 +6,145 @@
  * symmetry and allow multiple comparisons between the same projects.
  */
 
-const COMPARISON_PREFIX = 'org_chart_comparison_'; // Pattern: org_chart_comparison_{leftId}_{rightId}
+const COMPARISON_PREFIX = 'org_chart_analysis_'; // New Pattern: org_chart_analysis_{uuid}
+const LEGACY_PREFIX = 'org_chart_comparison_'; // Old Pattern
 
 export const comparisonStorageService = {
     /**
-     * Generate localStorage key for a comparison
-     * @param {string} leftId - Left project ID
-     * @param {string} rightId - Right project ID
-     * @returns {string} Storage key
+     * Generate a unique ID for a new analysis
+     * @returns {string} Unique ID
      */
-    getComparisonKey: (leftId, rightId) => {
-        return `${COMPARISON_PREFIX}${leftId}_${rightId}`;
+    generateId: () => {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
 
     /**
-     * Load comparison analysis data
+     * Create a new analysis record
+     * @param {string} type - Type of analysis ('side-by-side', 'temporal', etc.)
+     * @param {Array} projectIds - Array of project IDs involved
+     * @param {Object} meta - Additional metadata (names, etc.)
+     * @param {string} name - Optional custom name for the analysis
+     * @returns {Promise<string>} The new analysis ID
+     */
+    createAnalysis: (type, projectIds, meta = {}, name = null) => {
+        try {
+            const id = comparisonStorageService.generateId();
+            const key = `${COMPARISON_PREFIX}${id}`;
+
+            // Generate default name if not provided
+            const defaultName = name || `Analysis ${new Date().toLocaleDateString()}`;
+
+            const analysisRecord = {
+                id,
+                name: defaultName,
+                type,
+                projectIds,
+                meta,
+                createdAt: Date.now(),
+                lastModified: Date.now(),
+                analysis: comparisonStorageService.getEmptyAnalysis()
+            };
+
+            localStorage.setItem(key, JSON.stringify(analysisRecord));
+            return Promise.resolve(id);
+        } catch (error) {
+            console.error('Failed to create analysis:', error);
+            return Promise.reject(error);
+        }
+    },
+
+    /**
+     * Rename an analysis
+     * @param {string} id - Analysis ID
+     * @param {string} newName - New name for the analysis
+     * @returns {Promise<boolean>} Success status
+     */
+    renameAnalysis: (id, newName) => {
+        try {
+            const key = `${COMPARISON_PREFIX}${id}`;
+            const existing = comparisonStorageService.getAnalysis(id);
+
+            if (!existing) {
+                throw new Error(`Analysis ${id} not found`);
+            }
+
+            const updated = {
+                ...existing,
+                name: newName,
+                lastModified: Date.now()
+            };
+
+            localStorage.setItem(key, JSON.stringify(updated));
+            return Promise.resolve(true);
+        } catch (error) {
+            console.error('Failed to rename analysis:', error);
+            return Promise.reject(error);
+        }
+    },
+
+    /**
+     * Get analysis by ID
+     * @param {string} id - Analysis ID
+     * @returns {Object|null} Analysis record
+     */
+    getAnalysis: (id) => {
+        try {
+            // Try new prefix first
+            const key = `${COMPARISON_PREFIX}${id}`;
+            const data = localStorage.getItem(key);
+            if (data) return JSON.parse(data);
+
+            // Fallback to check if it's a legacy key (though legacy keys were composite)
+            return null;
+        } catch (error) {
+            console.error('Failed to load analysis:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Save/Update analysis data
+     * @param {string} id - Analysis ID
+     * @param {Object} analysisData - The analysis content (SWOT, notes)
+     * @returns {Promise<boolean>} Success status
+     */
+    saveAnalysis: (id, analysisData) => {
+        try {
+            const key = `${COMPARISON_PREFIX}${id}`;
+            const existing = comparisonStorageService.getAnalysis(id);
+
+            if (!existing) {
+                throw new Error(`Analysis ${id} not found`);
+            }
+
+            const updated = {
+                ...existing,
+                analysis: analysisData,
+                lastModified: Date.now()
+            };
+
+            localStorage.setItem(key, JSON.stringify(updated));
+            return Promise.resolve(true);
+        } catch (error) {
+            console.error('Failed to save analysis:', error);
+            return Promise.reject(error);
+        }
+    },
+
+    /**
+     * Load comparison analysis data (Legacy Support)
      * @param {string} leftId - Left project ID
      * @param {string} rightId - Right project ID
      * @returns {Object|null} Comparison record or null if not found
      */
     loadComparison: (leftId, rightId) => {
         try {
-            const key = comparisonStorageService.getComparisonKey(leftId, rightId);
-            const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : null;
+            // Legacy check
+            const legacyKey = `${LEGACY_PREFIX}${leftId}_${rightId}`;
+            const legacyData = localStorage.getItem(legacyKey);
+            if (legacyData) return JSON.parse(legacyData);
+
+            return null;
         } catch (error) {
             console.error('Failed to load comparison data:', error);
             return null;
@@ -37,19 +152,12 @@ export const comparisonStorageService = {
     },
 
     /**
-     * Save comparison analysis data
-     * @param {string} leftId - Left project ID
-     * @param {string} rightId - Right project ID
-     * @param {Object} analysisData - SWOT and notes data
-     * @param {string} leftName - Left project name
-     * @param {string} rightName - Right project name
-     * @returns {Promise<boolean>} Success status
+     * Save comparison analysis data (Legacy Support)
+     * @deprecated Use createAnalysis/saveAnalysis instead
      */
     saveComparison: (leftId, rightId, analysisData, leftName = '', rightName = '') => {
         try {
-            const key = comparisonStorageService.getComparisonKey(leftId, rightId);
-
-            // Load existing comparison or create new structure
+            const key = `${LEGACY_PREFIX}${leftId}_${rightId}`;
             const existingComparison = comparisonStorageService.loadComparison(leftId, rightId);
 
             const comparisonRecord = {
@@ -73,62 +181,50 @@ export const comparisonStorageService = {
 
     /**
      * Delete a comparison record
-     * @param {string} leftId - Left project ID
-     * @param {string} rightId - Right project ID
+     * @param {string} id - Analysis ID
      * @returns {Promise<boolean>} Success status
      */
-    deleteComparison: (leftId, rightId) => {
+    deleteAnalysis: (id) => {
         try {
-            const key = comparisonStorageService.getComparisonKey(leftId, rightId);
+            const key = `${COMPARISON_PREFIX}${id}`;
             localStorage.removeItem(key);
             return Promise.resolve(true);
         } catch (error) {
-            console.error('Failed to delete comparison:', error);
+            console.error('Failed to delete analysis:', error);
             return Promise.reject(error);
         }
     },
 
     /**
-     * List all comparison records
-     * @returns {Array} Array of comparison records
+     * List all analysis records
+     * @returns {Array} Array of analysis records
      */
-    listComparisons: () => {
+    listAnalyses: () => {
         try {
-            const comparisons = [];
+            const analyses = [];
 
-            // Iterate through localStorage to find all comparison keys
+            // Iterate through localStorage
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
 
                 if (key && key.startsWith(COMPARISON_PREFIX)) {
                     try {
                         const data = JSON.parse(localStorage.getItem(key));
-                        comparisons.push(data);
+                        analyses.push(data);
                     } catch (parseError) {
-                        console.warn(`Failed to parse comparison data for key ${key}:`, parseError);
+                        console.warn(`Failed to parse analysis data for key ${key}:`, parseError);
                     }
                 }
             }
 
             // Sort by last modified (most recent first)
-            comparisons.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+            analyses.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
 
-            return comparisons;
+            return analyses;
         } catch (error) {
-            console.error('Failed to list comparisons:', error);
+            console.error('Failed to list analyses:', error);
             return [];
         }
-    },
-
-    /**
-     * Check if a comparison exists
-     * @param {string} leftId - Left project ID
-     * @param {string} rightId - Right project ID
-     * @returns {boolean} True if comparison exists
-     */
-    comparisonExists: (leftId, rightId) => {
-        const key = comparisonStorageService.getComparisonKey(leftId, rightId);
-        return localStorage.getItem(key) !== null;
     },
 
     /**
