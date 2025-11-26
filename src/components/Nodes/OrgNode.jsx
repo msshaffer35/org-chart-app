@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { User, Briefcase, Building, Plus, Search } from 'lucide-react';
 import useStore from '../../store';
+import DeidSummaryCard from '../DeidSummaryCard';
 
 const OrgNode = ({ id, data, selected }) => {
     const updateNodeData = useStore((state) => state.updateNodeData);
@@ -212,50 +213,7 @@ const OrgNode = ({ id, data, selected }) => {
 
                 {/* De-identified Summary Card */}
                 {summary && summary.count > 0 && (
-                    <div className="mt-3 bg-gray-50 rounded p-2 border border-gray-200 text-xs">
-                        <div className="font-semibold text-gray-700 mb-1 flex justify-between">
-                            <span>+ {summary.count} Descendants</span>
-                        </div>
-                        <div className="space-y-1 text-gray-500">
-                            {/* Only show top stats to avoid clutter */}
-                            {Object.entries(summary.metadata.employeeTypes || {}).map(([type, count]) => (
-                                <div key={type} className="flex justify-between">
-                                    <span>{type}</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                            ))}
-                            {Object.entries(summary.metadata.coes || {}).map(([coe, count]) => (
-                                <div key={coe} className="flex justify-between">
-                                    <span>{coe} (COE)</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                            ))}
-                            {Object.entries(summary.metadata.scrumTeams || {}).map(([team, count]) => (
-                                <div key={team} className="flex justify-between">
-                                    <span>{team} (Scrum)</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                            ))}
-                            {Object.entries(summary.metadata.regions || {}).map(([region, count]) => (
-                                <div key={region} className="flex justify-between">
-                                    <span>{region}</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                            ))}
-                            {Object.entries(summary.metadata.functions || {}).map(([func, count]) => (
-                                <div key={func} className="flex justify-between">
-                                    <span>{func}</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                            ))}
-                            {Object.entries(summary.metadata.subfunctions || {}).map(([sub, count]) => (
-                                <div key={sub} className="flex justify-between">
-                                    <span>{sub}</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <DeidSummaryCard summary={summary} />
                 )}
             </div>
 

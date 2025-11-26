@@ -86,6 +86,8 @@ const DeidentificationControls = () => {
                                 Manage Mappings
                             </button>
                         </div>
+
+
                     </div>
                 )}
             </div>
