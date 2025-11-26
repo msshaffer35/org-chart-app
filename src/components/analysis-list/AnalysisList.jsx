@@ -60,7 +60,63 @@ const AnalysisList = () => {
         switch (type) {
             case 'side-by-side': return 'Side-by-Side Comparison';
             case 'temporal': return 'Time Comparison';
+            case 'single': return 'Single Analysis';
             default: return type || 'Analysis';
+        }
+    };
+
+    const getBadgeStyles = (type) => {
+        switch (type) {
+            case 'side-by-side':
+                return 'bg-purple-100 text-purple-800';
+            case 'temporal':
+                return 'bg-blue-100 text-blue-800';
+            case 'single':
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-slate-100 text-slate-800';
+        }
+    };
+
+    const renderProjectsInvolved = (analysis) => {
+        const { type, meta } = analysis;
+
+        if (type === 'side-by-side' && meta?.leftName && meta?.rightName) {
+            return (
+                <div className="flex flex-col text-xs">
+                    <span>{meta.leftName}</span>
+                    <span className="text-slate-400">vs</span>
+                    <span>{meta.rightName}</span>
+                </div>
+            );
+        }
+
+        if (type === 'temporal' && meta?.baseName && meta?.targetName) {
+            return (
+                <div className="flex flex-col text-xs">
+                    <span>{meta.baseName} <span className="text-slate-400">(before)</span></span>
+                    <span>{meta.targetName} <span className="text-slate-400">(after)</span></span>
+                </div>
+            );
+        }
+
+        if (type === 'single' && meta?.name) {
+            return <span className="text-xs">{meta.name}</span>;
+        }
+
+        return <span className="text-slate-400 italic text-xs">Unknown Projects</span>;
+    };
+
+    const getAnalysisRoute = (analysis) => {
+        switch (analysis.type) {
+            case 'side-by-side':
+                return `/analysis/side-by-side/${analysis.id}`;
+            case 'temporal':
+                return `/analysis/temporal/${analysis.id}`;
+            case 'single':
+                return `/analysis/single/${analysis.id}`;
+            default:
+                return `/analysis/side-by-side/${analysis.id}`;
         }
     };
 
@@ -135,21 +191,12 @@ const AnalysisList = () => {
                                 )}
                             </td>
                             <td className="px-6 py-4 text-slate-600">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${analysis.type === 'side-by-side' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                                    }`}>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeStyles(analysis.type)}`}>
                                     {getAnalysisTypeLabel(analysis.type)}
                                 </span>
                             </td>
                             <td className="px-6 py-4 text-slate-600">
-                                {analysis.meta?.leftName && analysis.meta?.rightName ? (
-                                    <div className="flex flex-col text-xs">
-                                        <span>{analysis.meta.leftName}</span>
-                                        <span className="text-slate-400">vs</span>
-                                        <span>{analysis.meta.rightName}</span>
-                                    </div>
-                                ) : (
-                                    <span className="text-slate-400 italic">Unknown Projects</span>
-                                )}
+                                {renderProjectsInvolved(analysis)}
                             </td>
                             <td className="px-6 py-4 text-slate-500">
                                 {formatDate(analysis.lastModified)}
@@ -157,7 +204,7 @@ const AnalysisList = () => {
                             <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-3">
                                     <button
-                                        onClick={() => navigate(`/analysis/side-by-side/${analysis.id}`)}
+                                        onClick={() => navigate(getAnalysisRoute(analysis))}
                                         className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
                                     >
                                         Open <ExternalLink size={14} />

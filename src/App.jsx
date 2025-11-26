@@ -13,11 +13,21 @@ function App() {
       <Routes>
         <Route path="/" element={<ProjectList />} />
         <Route path="/project/:projectId" element={<Editor />} />
+
+        {/* Analysis Setup */}
+        <Route path="/analysis/new" element={<AnalysisSetup />} />
+
+        {/* Single Analysis (Start from Scratch) */}
+        <Route path="/analysis/:projectId" element={<SingleAnalysis />} />
+        <Route path="/analysis/single/:analysisId" element={<SingleAnalysis />} />
+
+        {/* Temporal Comparison (Changes Over Time) */}
         <Route path="/compare/:baseId/:targetId" element={<Comparison />} />
+        <Route path="/analysis/temporal/:analysisId" element={<Comparison />} />
+
+        {/* Side-by-Side Comparison (Different Orgs) */}
         <Route path="/view-side-by-side/:leftId/:rightId" element={<SideBySideView />} />
         <Route path="/analysis/side-by-side/:analysisId" element={<SideBySideView />} />
-        <Route path="/analysis/new" element={<AnalysisSetup />} />
-        <Route path="/analysis/:projectId" element={<SingleAnalysis />} />
       </Routes>
     </BrowserRouter>
   );

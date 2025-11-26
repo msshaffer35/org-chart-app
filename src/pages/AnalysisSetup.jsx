@@ -67,14 +67,24 @@ const AnalysisSetup = () => {
             if (!name) return;
 
             try {
-                const id = await createProject({
+                // 1. Create the Project
+                const projectId = await createProject({
                     account: name,
                     department: 'Analysis',
                     dateCollected: new Date().toISOString().split('T')[0]
                 });
-                navigate(`/analysis/${id}`);
+
+                // 2. Create the Analysis Record
+                const analysisId = await comparisonStorageService.createAnalysis(
+                    'single',
+                    [projectId],
+                    { name: name },
+                    name // Use project name as analysis name
+                );
+
+                navigate(`/analysis/single/${analysisId}`);
             } catch (error) {
-                console.error("Failed to create project", error);
+                console.error("Failed to create project or analysis", error);
             }
         } else {
             // Set mode and show drag-drop interface
@@ -84,14 +94,24 @@ const AnalysisSetup = () => {
         }
     };
 
-
-
     const handleStartAnalysis = async () => {
         if (!baseProject || !targetProject) return;
 
         if (selectedMode === 'temporal') {
             // Option 1: Compare changes over time
-            navigate(`/compare/${baseProject.id}/${targetProject.id}`);
+            try {
+                const newId = await comparisonStorageService.createAnalysis(
+                    'temporal',
+                    [baseProject.id, targetProject.id],
+                    {
+                        baseName: baseProject.account,
+                        targetName: targetProject.account
+                    }
+                );
+                navigate(`/analysis/temporal/${newId}`);
+            } catch (error) {
+                console.error("Failed to create temporal analysis", error);
+            }
         } else if (selectedMode === 'spatial') {
             // Option 2: Compare different organizations
             try {

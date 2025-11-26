@@ -3,17 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ReactFlow, { ReactFlowProvider } from 'reactflow';
 import useStore from '../store/useStore';
 import { storageService } from '../services/storageService';
+import { comparisonStorageService } from '../services/comparisonStorageService';
 import { diffOrgCharts } from '../utils/diffUtils';
 import ReadOnlyCanvas from '../components/Canvas/ReadOnlyCanvas';
 import OrgChartCanvas from '../components/Canvas/OrgChartCanvas';
 import AnalysisPanel from '../components/AnalysisPanel';
 import MainLayout from '../components/Layout/MainLayout';
 import DualPaneLayout from '../components/Layout/DualPaneLayout';
-import { ArrowLeft, RefreshCw, AlertCircle, FileText } from 'lucide-react';
+import { ArrowLeft, RefreshCw, AlertCircle, FileText, Edit2, Check, X } from 'lucide-react';
 
 
 const Comparison = () => {
-    const { baseId, targetId } = useParams();
+    const { baseId: paramBaseId, targetId: paramTargetId, analysisId } = useParams();
     const navigate = useNavigate();
 
     // Store hooks for Target (Right Side)
@@ -28,20 +29,58 @@ const Comparison = () => {
     const [diffStats, setDiffStats] = useState({ added: 0, removed: 0, modified: 0, moved: 0 });
     const [showAnalysis, setShowAnalysis] = useState(false);
 
-    const currentProject = useStore((state) => state.currentProject);
+    // Analysis State
+    const [analysisData, setAnalysisData] = useState(null);
+    const [isRenaming, setIsRenaming] = useState(false);
+    const [newName, setNewName] = useState('');
 
+    // IDs
+    const [currentBaseId, setCurrentBaseId] = useState(null);
+    const [currentTargetId, setCurrentTargetId] = useState(null);
 
     // Load Data
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
+                let bId = paramBaseId;
+                let tId = paramTargetId;
+
+                // Scenario 1: Loaded via Analysis ID
+                if (analysisId) {
+                    const analysis = comparisonStorageService.getAnalysis(analysisId);
+                    if (analysis) {
+                        setAnalysisData(analysis);
+                        setNewName(analysis.name || 'Untitled Analysis');
+                        if (analysis.projectIds && analysis.projectIds.length >= 2) {
+                            bId = analysis.projectIds[0];
+                            tId = analysis.projectIds[1];
+                        }
+                    }
+                }
+                // Scenario 2: Legacy Route -> Create Analysis & Redirect
+                else if (paramBaseId && paramTargetId) {
+                    // Check for legacy comparison or create new analysis
+                    // For temporal, we just create a new one to ensure consistency
+                    const newId = await comparisonStorageService.createAnalysis(
+                        'temporal',
+                        [paramBaseId, paramTargetId]
+                    );
+                    navigate(`/analysis/temporal/${newId}`, { replace: true });
+                    return;
+                }
+
+                if (!bId || !tId) throw new Error("Missing project IDs");
+
+                setCurrentBaseId(bId);
+                setCurrentTargetId(tId);
+
                 // 1. Load Base Data (Directly)
-                const base = await storageService.loadProject(baseId);
+                const base = await storageService.loadProject(bId);
                 setBaseData(base || { nodes: [], edges: [] });
 
                 // 2. Load Target Data (Into Store)
-                await loadChart(targetId);
+                await loadChart(tId);
 
                 // Disable filters for comparison accuracy
                 useStore.getState().clearFilter();
@@ -54,7 +93,7 @@ const Comparison = () => {
             }
         };
         loadData();
-    }, [baseId, targetId, loadChart]);
+    }, [paramBaseId, paramTargetId, analysisId, loadChart, navigate]);
 
     // Calculate Diff & Apply Highlights
     useEffect(() => {
@@ -67,13 +106,6 @@ const Comparison = () => {
             modified: diff.modified.length,
             moved: diff.moved.length
         });
-
-        // Apply visual highlights to Target Nodes in Store
-        // We don't want to persist these styles, just show them.
-        // But since OrgChartCanvas reads from store, we must update store.
-        // We should be careful not to save these "highlight" classes if we save the project.
-        // For now, let's assume the user accepts that "Comparison Mode" might temporarily dirty the state.
-        // Ideally, we'd use a separate "overlay" layer, but modifying data is easier for now.
 
         const newNodes = targetNodes.map(node => {
             let highlightClass = '';
@@ -101,6 +133,21 @@ const Comparison = () => {
 
     }, [baseData, targetNodes, targetEdges, setNodes]);
 
+    const handleSaveAnalysis = async (data) => {
+        if (analysisId) {
+            await comparisonStorageService.saveAnalysis(analysisId, data);
+            setAnalysisData(prev => ({ ...prev, analysis: data }));
+        }
+    };
+
+    const handleRename = async () => {
+        if (newName.trim() && analysisId) {
+            await comparisonStorageService.renameAnalysis(analysisId, newName);
+            setAnalysisData(prev => ({ ...prev, name: newName }));
+            setIsRenaming(false);
+        }
+    };
+
     if (loading) {
         return <div className="flex items-center justify-center h-screen">Loading Comparison...</div>;
     }
@@ -114,7 +161,40 @@ const Comparison = () => {
                         <button onClick={() => navigate('/')} className="text-slate-500 hover:text-slate-800">
                             <ArrowLeft size={20} />
                         </button>
-                        <h1 className="font-semibold text-slate-800">Comparison Mode</h1>
+
+                        <div className="flex flex-col">
+                            {isRenaming ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="px-2 py-0.5 border border-blue-300 rounded text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        autoFocus
+                                    />
+                                    <button onClick={handleRename} className="text-green-600 hover:bg-green-50 p-1 rounded">
+                                        <Check size={16} />
+                                    </button>
+                                    <button onClick={() => setIsRenaming(false)} className="text-red-500 hover:bg-red-50 p-1 rounded">
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 group">
+                                    <h1 className="font-semibold text-slate-800">
+                                        {analysisData?.name || 'Comparison Mode'}
+                                    </h1>
+                                    {analysisId && (
+                                        <button
+                                            onClick={() => setIsRenaming(true)}
+                                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600 transition-opacity"
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="flex gap-3 text-xs font-medium px-4 border-l border-slate-200">
                             <span className="text-green-600 flex items-center gap-1">
@@ -162,10 +242,12 @@ const Comparison = () => {
                                 Scenario / Target
                             </div>
 
-                            {showAnalysis && currentProject && (
+                            {showAnalysis && (
                                 <AnalysisPanel
-                                    projectId={targetId}
-                                    initialData={currentProject.analysis}
+                                    comparisonId={analysisId}
+                                    projectId={currentTargetId} // Fallback if needed, but comparisonId should take precedence in updated AnalysisPanel
+                                    initialData={analysisData?.analysis}
+                                    onSave={handleSaveAnalysis}
                                     onClose={() => setShowAnalysis(false)}
                                 />
                             )}
