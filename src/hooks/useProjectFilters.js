@@ -24,7 +24,7 @@ export const useProjectFilters = (projectList) => {
     const [selectedRegions, setSelectedRegions] = useState([]);
     const [selectedScrumTeams, setSelectedScrumTeams] = useState([]);
     const [selectedCoes, setSelectedCoes] = useState([]);
-    const [showAnalysisOnly, setShowAnalysisOnly] = useState(false);
+    const [selectedProjectTypes, setSelectedProjectTypes] = useState([]);
 
     const [sortBy, setSortBy] = useState('dateCollected-desc');
 
@@ -135,18 +135,27 @@ export const useProjectFilters = (projectList) => {
                 const matchesScrum = checkMultiSelect(project.scrumTeams, selectedScrumTeams);
                 const matchesCoe = checkMultiSelect(project.coes, selectedCoes);
 
-                // Analysis Filter
-                const matchesAnalysis = !showAnalysisOnly || (
-                    project.analysis && (
+                // Project Type Filter (Charts, Analyzed Projects, Scenarios)
+                const matchesProjectType = (() => {
+                    if (selectedProjectTypes.length === 0) return true; // No filter = show all
+
+                    const hasAnalysis = project.analysis && (
                         (project.analysis.swot && Object.values(project.analysis.swot).some(arr => arr.length > 0)) ||
                         project.analysis.generalNotes ||
                         project.analysis.strategicAlignment
-                    )
-                );
+                    );
+
+                    return selectedProjectTypes.some(type => {
+                        if (type === 'Charts') return project.type !== 'SCENARIO';
+                        if (type === 'Analyzed Projects') return hasAnalysis;
+                        if (type === 'Scenarios') return project.type === 'SCENARIO';
+                        return false;
+                    });
+                })();
 
                 return matchesGlobal && matchesAccount && matchesDept &&
                     matchesFunction && matchesSubFunction && matchesEmployeeType &&
-                    matchesRegion && matchesScrum && matchesCoe && matchesAnalysis;
+                    matchesRegion && matchesScrum && matchesCoe && matchesProjectType;
             })
             .sort((a, b) => {
                 switch (sortBy) {
@@ -162,27 +171,38 @@ export const useProjectFilters = (projectList) => {
                         return 0;
                 }
             });
-    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy, selectedFunctions, selectedSubFunctions, selectedEmployeeTypes, selectedRegions, selectedScrumTeams, selectedCoes]);
+    }, [projectList, globalSearch, selectedAccount, selectedDept, sortBy, selectedFunctions, selectedSubFunctions, selectedEmployeeTypes, selectedRegions, selectedScrumTeams, selectedCoes, selectedProjectTypes]);
 
     // Tree View Logic: Group Scenarios under Actuals
     const projectTree = useMemo(() => {
         const actuals = filteredProjects.filter(p => p.type !== 'SCENARIO');
-        const scenarios = filteredProjects.filter(p => p.type === 'SCENARIO');
+        const filteredScenarios = filteredProjects.filter(p => p.type === 'SCENARIO');
 
-        // Create a map of scenarios by sourceProjectId
+        // Get ALL scenarios from the full project list (not just filtered ones)
+        const allScenarios = projectList.filter(p => p.type === 'SCENARIO');
+
+        // Create a map of ALL scenarios by sourceProjectId (for showing "View Scenarios" button)
         const scenariosBySource = {};
-        scenarios.forEach(s => {
+        allScenarios.forEach(s => {
             if (!s.sourceProjectId) return; // Orphan scenario?
             if (!scenariosBySource[s.sourceProjectId]) scenariosBySource[s.sourceProjectId] = [];
             scenariosBySource[s.sourceProjectId].push(s);
         });
 
-        // Attach scenarios to actuals
-        return actuals.map(actual => ({
+        // Attach all scenarios to actuals (even if scenarios are filtered out)
+        // This ensures the "View Scenarios" button appears on charts that have scenarios
+        const actualsWithChildren = actuals.map(actual => ({
             ...actual,
             children: scenariosBySource[actual.id] || []
         }));
-    }, [filteredProjects]);
+
+        // Find orphaned scenarios (filtered scenarios whose parent is not in the filtered actuals)
+        const actualIds = new Set(actuals.map(a => a.id));
+        const orphanedScenarios = filteredScenarios.filter(s => !actualIds.has(s.sourceProjectId));
+
+        // Return both actuals with children and orphaned scenarios as top-level items
+        return [...actualsWithChildren, ...orphanedScenarios];
+    }, [filteredProjects, projectList]);
 
     // Group projects by account for Account View
     const groupedProjects = useMemo(() => {
@@ -210,7 +230,7 @@ export const useProjectFilters = (projectList) => {
         selectedRegions, setSelectedRegions,
         selectedScrumTeams, setSelectedScrumTeams,
         selectedCoes, setSelectedCoes,
-        showAnalysisOnly, setShowAnalysisOnly,
+        selectedProjectTypes, setSelectedProjectTypes,
         sortBy, setSortBy,
         accounts, departments,
         functions, subFunctions, employeeTypes, regions, scrumTeams, coes,

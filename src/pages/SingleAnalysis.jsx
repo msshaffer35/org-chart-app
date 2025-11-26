@@ -30,7 +30,7 @@ const SingleAnalysis = () => {
                 {/* Header */}
                 <div className="h-14 bg-white border-b border-slate-200 flex items-center px-4 justify-between shadow-sm z-20 flex-none">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/analysis/new')} className="text-slate-500 hover:text-slate-800">
+                        <button onClick={() => navigate('/')} className="text-slate-500 hover:text-slate-800">
                             <ArrowLeft size={20} />
                         </button>
                         <div>
