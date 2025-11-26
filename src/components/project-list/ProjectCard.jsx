@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, ChevronDown, ChevronRight, Briefcase, Target, Pencil, Trash2, Calendar } from 'lucide-react';
+import { Building2, ChevronDown, ChevronRight, Briefcase, Target, Pencil, Trash2, Calendar, FileText } from 'lucide-react';
 
 const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
     const navigate = useNavigate();
@@ -21,10 +21,15 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
         });
     };
 
+    const hasAnalysis = project.analysis && (
+        (project.analysis.swot && Object.values(project.analysis.swot).some(arr => arr.length > 0)) ||
+        project.analysis.generalNotes ||
+        project.analysis.strategicAlignment
+    );
+
     return (
         <div
-            onClick={() => navigate(`/project/${project.id}`)}
-            className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col relative"
+            className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col relative"
         >
             <div className="h-24 bg-slate-100 flex items-center justify-center border-b border-slate-100 group-hover:bg-slate-50 transition-colors relative">
                 <Building2 className="text-slate-300 group-hover:text-blue-400 transition-colors" size={40} />
@@ -47,6 +52,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
                     )}
                     {project.scrumTeams && project.scrumTeams.length > 0 && (
                         <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-medium rounded-full" title={`Scrum: ${project.scrumTeams.join(', ')}`}>Scrum</span>
+                    )}
+                    {hasAnalysis && (
+                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded-full flex items-center gap-1">
+                            <FileText size={10} />
+                            Analysis
+                        </span>
                     )}
                 </div>
             </div>
@@ -76,7 +87,6 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
                         </div>
                     </div>
                     <div className="flex gap-1">
-
                         <button
                             onClick={(e) => onCreateScenario(e, project)}
                             className="text-slate-400 hover:text-green-500 transition-colors p-1 rounded-md hover:bg-green-50"
@@ -102,13 +112,54 @@ const ProjectCard = ({ project, onEdit, onDelete, onCreateScenario }) => {
 
                 </div>
 
-                <div className="mt-auto pt-4 border-t border-slate-100 space-y-1">
-                    <div className="flex items-center text-xs text-slate-500">
-                        <Calendar size={12} className="mr-1.5" />
-                        <span>Collected: {formatDate(project.dateCollected)}</span>
+                <div className="mt-auto pt-4 space-y-3">
+                    {/* Action Buttons - Always visible on mobile, hover on desktop */}
+                    <div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/project/${project.id}`);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium"
+                        >
+                            <Building2 size={16} />
+                            View Chart
+                        </button>
+                        {hasAnalysis && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/analysis/${project.id}`);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition-colors text-sm font-medium"
+                            >
+                                <FileText size={16} />
+                                View Analysis
+                            </button>
+                        )}
+                        {project.children && project.children.length > 0 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsExpanded(!isExpanded);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors text-sm font-medium"
+                            >
+                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                View Scenarios
+                            </button>
+                        )}
                     </div>
-                    <div className="flex items-center text-xs text-slate-400">
-                        <span className="ml-4.5">Modified: {formatDate(project.lastModified)}</span>
+
+                    {/* Date Footer */}
+                    <div className="border-t border-slate-100 pt-3 space-y-1">
+                        <div className="flex items-center text-xs text-slate-500">
+                            <Calendar size={12} className="mr-1.5" />
+                            <span>Collected: {formatDate(project.dateCollected)}</span>
+                        </div>
+                        <div className="flex items-center text-xs text-slate-400">
+                            <span className="ml-4.5">Modified: {formatDate(project.lastModified)}</span>
+                        </div>
                     </div>
                 </div>
             </div>
