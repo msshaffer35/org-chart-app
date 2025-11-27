@@ -25,4 +25,13 @@ dist-ssr
 
 # CLAUDE.md
 CLAUDE.md
+ARCHITECTURE.md
+COMPONENTS.md
+DATA_FLOW.md
+PATTERNS.md
+REFACTORING_NOTES.md
+CLAUDE_orig.md
 
+
+# Ignore local settings for Claude extension
+.claude/settings.local.json
