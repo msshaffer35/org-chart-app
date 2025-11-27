@@ -217,4 +217,28 @@ export const storageService = {
     },
 
 
+    // --- Template Persistence ---
+
+    getTemplates: () => {
+        try {
+            const serialized = localStorage.getItem('org_chart_templates');
+            return serialized ? JSON.parse(serialized) : [];
+        } catch (error) {
+            console.error('Failed to load templates:', error);
+            return [];
+        }
+    },
+
+    saveTemplate: (template) => {
+        try {
+            const templates = storageService.getTemplates();
+            templates.push(template);
+            localStorage.setItem('org_chart_templates', JSON.stringify(templates));
+            return Promise.resolve(true);
+        } catch (error) {
+            console.error('Failed to save template:', error);
+            return Promise.reject(error);
+        }
+    },
+
 };
