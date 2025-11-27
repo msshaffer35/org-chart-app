@@ -70,9 +70,7 @@ const Editor = () => {
                         </div>
                     </div>
                 )}
-            </div>
 
-            <div className="absolute top-4 right-4 z-50">
                 <button
                     onClick={() => setShowSaveModal(true)}
                     className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg shadow-sm transition-all hover:shadow-md text-sm font-medium"
