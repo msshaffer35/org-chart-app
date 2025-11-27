@@ -100,7 +100,7 @@ export const storageService = {
             const projects = storageService.getProjects();
             const newProject = {
                 id: crypto.randomUUID(),
-                type: 'ACTUAL', // Default type
+                type: metadata.type || 'ACTUAL', // Default type
                 ...metadata, // { account, department, dateCollected }
                 lastModified: Date.now(),
             };

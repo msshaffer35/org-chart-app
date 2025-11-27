@@ -36,6 +36,19 @@ export const createProjectSlice = (set, get) => ({
         }
     },
 
+    createFromTemplate: async (templateId, metadata) => {
+        try {
+            // Import dynamically to avoid circular dependencies if any, though services are usually fine
+            const { templateService } = await import('../../services/templateService');
+            const id = await templateService.createProjectFromTemplate(templateId, metadata);
+            get().loadProjects();
+            return id;
+        } catch (error) {
+            console.error("Failed to create from template", error);
+            throw error;
+        }
+    },
+
     updateProject: async (id, metadata) => {
         try {
             await storageService.updateProjectMetadata(id, metadata);
