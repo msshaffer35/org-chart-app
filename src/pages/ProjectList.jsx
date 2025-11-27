@@ -9,10 +9,11 @@ import ProjectFilters from '../components/project-list/ProjectFilters';
 import ProjectCard from '../components/project-list/ProjectCard';
 import ProjectModal from '../components/project-list/ProjectModal';
 import AnalysisList from '../components/analysis-list/AnalysisList';
+import TemplateList from '../components/template-list/TemplateList';
 
 const ProjectList = () => {
     const navigate = useNavigate();
-    const { projectList, loadProjects, createProject, createScenario, updateProject, deleteProject } = useStore();
+    const { projectList, loadProjects, createProject, createScenario, updateProject, deleteProject, createFromTemplate } = useStore();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [showModal, setShowModal] = useState(false);
@@ -143,6 +144,23 @@ const ProjectList = () => {
         }
     };
 
+    const handleUseTemplate = async (template) => {
+        const account = prompt("Enter Client/Account Name for this new project:", "New Client");
+        if (!account) return;
+
+        try {
+            const newId = await createFromTemplate(template.id, {
+                account: account,
+                department: 'Organizational Structure',
+                dateCollected: new Date().toISOString().split('T')[0]
+            });
+            navigate(`/project/${newId}`);
+        } catch (error) {
+            console.error("Failed to create from template", error);
+            alert("Failed to create project from template");
+        }
+    };
+
     const [activeTab, setActiveTab] = useState('projects'); // 'projects' | 'analyses'
 
     return (
@@ -191,9 +209,18 @@ const ProjectList = () => {
                     >
                         Saved Analyses
                     </button>
+                    <button
+                        onClick={() => setActiveTab('templates')}
+                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'templates'
+                            ? 'border-indigo-600 text-indigo-600'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
+                    >
+                        Templates
+                    </button>
                 </div>
 
-                {activeTab === 'projects' ? (
+                {activeTab === 'projects' && (
                     <>
                         {/* Project View Controls */}
                         <div className="flex justify-end mb-4 gap-3">
@@ -296,8 +323,12 @@ const ProjectList = () => {
                             </>
                         )}
                     </>
-                ) : (
-                    <AnalysisList />
+                )}
+
+                {activeTab === 'analyses' && <AnalysisList />}
+
+                {activeTab === 'templates' && (
+                    <TemplateList onUseTemplate={handleUseTemplate} />
                 )}
 
                 {/* Create/Edit Project Modal */}

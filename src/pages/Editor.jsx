@@ -1,14 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import OrgChartCanvas from '../components/Canvas/OrgChartCanvas';
 import MainLayout from '../components/Layout/MainLayout';
 import useStore from '../store';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
+import SaveTemplateModal from '../components/SaveTemplateModal';
+import { templateService } from '../services/templateService';
 
 const Editor = () => {
     const { projectId } = useParams();
     const navigate = useNavigate();
     const loadChart = useStore((state) => state.loadChart);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
     useEffect(() => {
         if (projectId) {
@@ -26,6 +30,20 @@ const Editor = () => {
             month: '2-digit',
             day: '2-digit'
         });
+    };
+
+    const handleSaveTemplate = async (metadata) => {
+        setIsSavingTemplate(true);
+        try {
+            await templateService.saveProjectAsTemplate(projectId, metadata);
+            setShowSaveModal(false);
+            alert('Template saved successfully!');
+        } catch (error) {
+            console.error('Failed to save template:', error);
+            alert('Failed to save template');
+        } finally {
+            setIsSavingTemplate(false);
+        }
     };
 
     return (
@@ -52,8 +70,24 @@ const Editor = () => {
                         </div>
                     </div>
                 )}
+
+                <button
+                    onClick={() => setShowSaveModal(true)}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg shadow-sm transition-all hover:shadow-md text-sm font-medium"
+                >
+                    <Save size={16} />
+                    Save as Template
+                </button>
             </div>
+
             <OrgChartCanvas />
+
+            <SaveTemplateModal
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                onSave={handleSaveTemplate}
+                isSaving={isSavingTemplate}
+            />
         </MainLayout>
     );
 };
