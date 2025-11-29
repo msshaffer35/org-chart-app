@@ -23,6 +23,7 @@ export const createSettingsSlice = (set, get) => ({
             titleMappings: {}, // { "Original Title": "Standard Title" }
             departmentMappings: {}, // { "Original Dept": "Standard Dept" }
         },
+        autoSaveEnabled: false,
     },
 
     // Actions
