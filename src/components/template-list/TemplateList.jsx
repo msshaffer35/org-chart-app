@@ -1,21 +1,49 @@
 import React from 'react';
 import { templateService } from '../../services/templateService';
-import { Copy, Layout, Tag } from 'lucide-react';
+import { Copy, Layout, Tag, Trash2 } from 'lucide-react';
 
 const TemplateList = ({ onUseTemplate }) => {
-    const templates = templateService.getTemplates();
+    const [templates, setTemplates] = React.useState([]);
+
+    React.useEffect(() => {
+        setTemplates(templateService.getTemplates());
+    }, []);
+
+    const handleDelete = async (e, templateId) => {
+        e.stopPropagation(); // Prevent triggering the card click if we had one (though button is separate)
+
+        if (window.confirm('Are you sure you want to delete this template? This cannot be undone.')) {
+            try {
+                await templateService.deleteTemplate(templateId);
+                // Refresh the list
+                setTemplates(templateService.getTemplates());
+            } catch (error) {
+                console.error("Failed to delete template", error);
+                alert("Failed to delete template");
+            }
+        }
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.map(template => (
-                <div key={template.id} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col">
+                <div key={template.id} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col relative group">
                     <div className="flex items-start justify-between mb-4">
                         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                             <Layout size={24} />
                         </div>
-                        <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
-                            {template.category}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                                {template.category}
+                            </span>
+                            <button
+                                onClick={(e) => handleDelete(e, template.id)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                title="Delete Template"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
                     </div>
 
                     <h3 className="text-lg font-bold text-slate-900 mb-2">{template.name}</h3>
