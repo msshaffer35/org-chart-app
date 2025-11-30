@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ReactFlow, { ReactFlowProvider } from 'reactflow';
 import useStore from '../store';
 import { storageService } from '../services/storageService';
 import { comparisonStorageService } from '../services/comparisonStorageService';
@@ -11,7 +10,7 @@ import AnalysisPanel from '../components/AnalysisPanel';
 import MainLayout from '../components/Layout/MainLayout';
 import DualPaneLayout from '../components/Layout/DualPaneLayout';
 import ComparativeDashboard from '../components/ComparativeDashboard';
-import { ArrowLeft, RefreshCw, AlertCircle, FileText, Edit2, Check, X } from 'lucide-react';
+import { ArrowLeft, FileText, Edit2, Check, X, Save } from 'lucide-react';
 
 
 const Comparison = () => {
@@ -39,6 +38,20 @@ const Comparison = () => {
     // IDs
     const [currentBaseId, setCurrentBaseId] = useState(null);
     const [currentTargetId, setCurrentTargetId] = useState(null);
+
+    // Settings (Moved to top level to avoid hook order violation)
+    const autoSaveEnabled = useStore((state) => state.settings?.autoSaveEnabled || false);
+
+    // Save State
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved, error
+
+    useEffect(() => {
+        if (saveStatus === 'saved') {
+            const timer = setTimeout(() => setSaveStatus('idle'), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [saveStatus]);
 
     // Load Data
     useEffect(() => {
@@ -236,15 +249,70 @@ const Comparison = () => {
                         )}
                     </div>
 
-                    {!showDashboard && (
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={autoSaveEnabled}
+                                        onChange={(e) => {
+                                            useStore.getState().updateSettings({ autoSaveEnabled: e.target.checked });
+                                        }}
+                                    />
+                                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </div>
+                                <span className="text-sm font-medium text-slate-600">Auto-Save</span>
+                            </label>
+                        </div>
+
                         <button
-                            onClick={() => setShowAnalysis(!showAnalysis)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium ${showAnalysis ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            onClick={async () => {
+                                try {
+                                    setIsSaving(true);
+                                    setSaveStatus('saving');
+
+                                    // Save Project (Target)
+                                    const saveProject = useStore.getState().saveProject;
+                                    if (saveProject) {
+                                        await saveProject();
+                                    }
+
+                                    // Save Analysis Data if available
+                                    if (analysisData && analysisId) {
+                                        await comparisonStorageService.saveAnalysis(analysisId, analysisData);
+                                    }
+
+                                    setSaveStatus('saved');
+                                } catch (error) {
+                                    console.error('Manual save failed:', error);
+                                    setSaveStatus('error');
+                                    alert('Failed to save');
+                                } finally {
+                                    setIsSaving(false);
+                                }
+                            }}
+                            disabled={isSaving}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm border transition-all hover:shadow-md text-sm font-medium ${saveStatus === 'saved'
+                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                    : 'bg-white/90 backdrop-blur-sm text-slate-600 hover:text-slate-900 border-slate-200'
+                                }`}
                         >
-                            <FileText size={16} />
-                            Analysis
+                            <Save size={16} className={saveStatus === 'saved' ? 'text-green-600' : ''} />
+                            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save'}
                         </button>
-                    )}
+
+                        {!showDashboard && (
+                            <button
+                                onClick={() => setShowAnalysis(!showAnalysis)}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium ${showAnalysis ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                                <FileText size={16} />
+                                Analysis
+                            </button>
+                        )}
+                    </div>
                 </div>
 
 
