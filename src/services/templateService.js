@@ -68,11 +68,42 @@ const DEFAULT_TEMPLATES = [
 
 export const templateService = {
     /**
-     * Get all available templates (default + user saved)
+     * Get all available templates (migrates defaults to storage if needed)
      */
     getTemplates: () => {
-        const userTemplates = storageService.getTemplates();
-        return [...DEFAULT_TEMPLATES, ...userTemplates];
+        // Check if we've initialized the templates in storage
+        const isInitialized = localStorage.getItem('templates_initialized');
+
+        if (!isInitialized) {
+            // Migration: Load existing user templates (if any) and merge with defaults
+            const existingUserTemplates = storageService.getTemplates();
+
+            // Combine defaults with any existing user templates
+            // (We filter to avoid duplicates if defaults were somehow already added)
+            const allTemplates = [...DEFAULT_TEMPLATES];
+
+            existingUserTemplates.forEach(userTemplate => {
+                if (!allTemplates.find(t => t.id === userTemplate.id)) {
+                    allTemplates.push(userTemplate);
+                }
+            });
+
+            // Save everything to storage
+            storageService.saveTemplates(allTemplates);
+
+            // Mark as initialized
+            localStorage.setItem('templates_initialized', 'true');
+        }
+
+        // Now we can just return what's in storage, as it contains everything
+        return storageService.getTemplates();
+    },
+
+    /**
+     * Delete a template by ID
+     */
+    deleteTemplate: (templateId) => {
+        return storageService.deleteTemplate(templateId);
     },
 
     /**

@@ -241,4 +241,26 @@ export const storageService = {
         }
     },
 
+    saveTemplates: (templates) => {
+        try {
+            localStorage.setItem('org_chart_templates', JSON.stringify(templates));
+            return Promise.resolve(true);
+        } catch (error) {
+            console.error('Failed to save templates:', error);
+            return Promise.reject(error);
+        }
+    },
+
+    deleteTemplate: (templateId) => {
+        try {
+            const templates = storageService.getTemplates();
+            const filtered = templates.filter(t => t.id !== templateId);
+            localStorage.setItem('org_chart_templates', JSON.stringify(filtered));
+            return Promise.resolve(true);
+        } catch (error) {
+            console.error('Failed to delete template:', error);
+            return Promise.reject(error);
+        }
+    },
+
 };

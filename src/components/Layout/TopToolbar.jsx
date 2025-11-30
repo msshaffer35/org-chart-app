@@ -1,22 +1,9 @@
 import React from 'react';
-import { Layers, ArrowDown, ArrowRight, Settings, Trash2, Users } from 'lucide-react';
+import { Layers, ArrowDown, ArrowRight, Settings, Users } from 'lucide-react';
 import useStore from '../../store';
 
 const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRightPanel }) => {
     const layoutNodes = useStore((state) => state.layoutNodes);
-    const deleteNode = useStore((state) => state.deleteNode);
-    const nodes = useStore((state) => state.nodes);
-
-    // Find selected node
-    const selectedNode = nodes.find(n => n.selected);
-
-    const handleDelete = () => {
-        if (selectedNode) {
-            if (window.confirm(`Delete "${selectedNode.data.label}" and all its reports?`)) {
-                deleteNode(selectedNode.id);
-            }
-        }
-    };
 
     return (
         <div className="h-14 bg-white border-b border-gray-200 flex items-center px-4 justify-between shadow-sm z-20">
@@ -125,15 +112,6 @@ const TopToolbar = ({ activeOverlay, onToggleOverlay, showRightPanel, onToggleRi
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
-                {selectedNode && (
-                    <button
-                        onClick={handleDelete}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                        title="Delete Selected Node"
-                    >
-                        <Trash2 size={20} />
-                    </button>
-                )}
                 <button
                     onClick={onToggleRightPanel}
                     className={`p-2 rounded-full transition-colors ${showRightPanel ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}

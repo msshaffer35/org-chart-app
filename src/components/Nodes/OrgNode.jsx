@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { User, Briefcase, Building, Plus, Search } from 'lucide-react';
+import { User, Briefcase, Building, Plus, Search, Trash2 } from 'lucide-react';
 import useStore from '../../store';
 import DeidSummaryCard from '../DeidSummaryCard';
 
@@ -8,6 +8,7 @@ const OrgNode = ({ id, data, selected }) => {
     const updateNodeData = useStore((state) => state.updateNodeData);
     const addReport = useStore((state) => state.addReport);
     const setFilter = useStore((state) => state.setFilter);
+    const deleteNode = useStore((state) => state.deleteNode);
 
     const [isEditingName, setIsEditingName] = React.useState(false);
     const [isEditingRole, setIsEditingRole] = React.useState(false);
@@ -95,7 +96,7 @@ const OrgNode = ({ id, data, selected }) => {
             {/* Header / Color Strip */}
             <div className={`h-2 w-full rounded-t-lg ${effectiveColor}`} />
 
-            {/* Focus Button (Top Right) */}
+            {/* Focus Button (Top Left) */}
             {!isDeidentified && (
                 <button
                     onClick={(e) => {
@@ -103,13 +104,33 @@ const OrgNode = ({ id, data, selected }) => {
                         setFilter('SUBTREE', id);
                     }}
                     className="
-                        absolute top-3 right-3
+                        absolute top-3 left-3
                         p-1.5 rounded-full bg-white text-gray-500 hover:text-blue-600 hover:bg-blue-50
                         opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm border border-gray-100
                     "
                     title="Focus on this team"
                 >
                     <Search size={14} />
+                </button>
+            )}
+
+            {/* Delete Button (Top Right - Visible when selected) */}
+            {!isDeidentified && selected && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Delete "${data.label}" and all its reports?`)) {
+                            deleteNode(id);
+                        }
+                    }}
+                    className="
+                        absolute top-3 right-3
+                        p-1.5 rounded-full bg-white text-red-500 hover:text-red-600 hover:bg-red-50
+                        transition-all duration-200 shadow-sm border border-gray-100
+                    "
+                    title="Delete node and all reports"
+                >
+                    <Trash2 size={14} />
                 </button>
             )}
 

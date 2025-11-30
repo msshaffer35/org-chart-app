@@ -168,7 +168,7 @@ const ProjectList = () => {
             <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">My Dashboard</h1>
+                        <h1 className="text-3xl font-bold text-slate-900">OrgPilot</h1>
                         <p className="text-slate-500 mt-2">Manage your organization charts and analyses</p>
                     </div>
                     <div className="flex gap-3">
