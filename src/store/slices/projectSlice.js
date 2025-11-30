@@ -101,5 +101,80 @@ export const createProjectSlice = (set, get) => ({
     resetChart: async () => {
         // Only clear current state, don't delete persistence unless explicitly requested
         set({ nodes: [], edges: [], filterState: { type: 'NONE', value: null } });
+    },
+
+    saveProject: async () => {
+        const state = get();
+        const { currentProjectId, nodes, edges } = state;
+
+        if (!currentProjectId) return;
+
+        try {
+            const metadata = aggregateMetadata(nodes);
+            await storageService.saveProject(
+                currentProjectId,
+                { nodes, edges },
+                metadata
+            );
+
+            // Update current project metadata in state if needed
+            // The storageService.saveProject updates the lastModified in local storage
+            // We might want to reflect that in the UI immediately
+            const updatedMeta = storageService.getProjectMetadata(currentProjectId);
+            set({ currentProject: updatedMeta });
+
+        } catch (error) {
+            console.error('Failed to save project:', error);
+            throw error;
+        }
     }
 });
+
+// Helper to aggregate metadata from nodes
+const aggregateMetadata = (nodes) => {
+    const metadata = {
+        functions: new Set(),
+        subFunctions: new Set(),
+        employeeTypes: new Set(),
+        regions: new Set(),
+        scrumTeams: new Set(),
+        coes: new Set()
+    };
+
+    nodes.forEach(node => {
+        if (node.data) {
+            if (node.data.employeeType) {
+                metadata.employeeTypes.add(node.data.employeeType);
+            }
+
+            if (node.data.teamType) {
+                if (node.data.teamType.scrum) {
+                    metadata.scrumTeams.add(node.data.teamType.scrum);
+                }
+                if (node.data.teamType.coe) {
+                    metadata.coes.add(node.data.teamType.coe);
+                }
+                if (Array.isArray(node.data.teamType.regions)) {
+                    node.data.teamType.regions.forEach(r => metadata.regions.add(r));
+                }
+                if (Array.isArray(node.data.teamType.functions)) {
+                    node.data.teamType.functions.forEach(f => metadata.functions.add(f));
+                }
+                if (Array.isArray(node.data.teamType.subFunctions)) {
+                    node.data.teamType.subFunctions.forEach(sf =>
+                        metadata.subFunctions.add(sf)
+                    );
+                }
+            }
+        }
+    });
+
+    return {
+        functions: Array.from(metadata.functions),
+        subFunctions: Array.from(metadata.subFunctions),
+        employeeTypes: Array.from(metadata.employeeTypes),
+        regions: Array.from(metadata.regions),
+        scrumTeams: Array.from(metadata.scrumTeams),
+        coes: Array.from(metadata.coes)
+    };
+};
